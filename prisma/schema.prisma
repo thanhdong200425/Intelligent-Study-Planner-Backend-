@@ -1,0 +1,228 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User management
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  avatar    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships - all user data
+  courses           Course[]
+  deadlines         Deadline[]
+  tasks             Task[]
+  availabilityWindows AvailabilityWindow[]
+  timeBlocks        TimeBlock[]
+  habits            Habit[]
+  habitCompletions  HabitCompletion[]
+  weeklySummaries   WeeklySummary[]
+  timerSessions     TimerSession[]
+
+  @@map("users")
+}
+
+// Core academic entities
+model Course {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deadlines Deadline[]
+  tasks     Task[]
+
+  @@map("courses")
+}
+
+model Deadline {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  title     String
+  courseId  Int
+  dueDate   DateTime
+  priority  DeadlinePriority @default(MEDIUM)
+  completed Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  @@map("deadlines")
+}
+
+model Task {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  title           String
+  courseId        Int
+  type            TaskType
+  estimateMinutes Int
+  deadlineId      Int?
+  completed       Boolean  @default(false)
+  actualMinutes   Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  deadline   Deadline?  @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
+  timeBlocks TimeBlock[]
+
+  @@map("tasks")
+}
+
+// Scheduling and time management
+model AvailabilityWindow {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  dayOfWeek Int      // 0-6 (Sunday-Saturday)
+  startTime String   // HH:MM format
+  endTime   String   // HH:MM format
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("availability_windows")
+}
+
+model TimeBlock {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  taskId        Int?
+  startTime     DateTime
+  endTime       DateTime
+  isBreak       Boolean   @default(false)
+  breakType     BreakType?
+  actualMinutes Int?
+  completed     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task          Task?          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  timerSessions TimerSession[]
+
+  @@map("time_blocks")
+}
+
+// Habit tracking
+model Habit {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  name          String
+  targetMinutes Int
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions HabitCompletion[]
+
+  @@map("habits")
+}
+
+model HabitCompletion {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  habitId Int
+  date    DateTime @db.Date
+  minutes Int
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  // Ensure one completion per habit per day
+  @@unique([habitId, date])
+  @@map("habit_completions")
+}
+
+// Analytics and reporting
+model WeeklySummary {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int
+  weekStart               DateTime @db.Date
+  weekEnd                 DateTime @db.Date
+  tasksCompleted          Int      @default(0)
+  tasksOverdue            Int      @default(0)
+  totalActualTime         Int      @default(0) // in minutes
+  totalPredictedTime      Int      @default(0) // in minutes
+  timePerCourse           Json     // { [courseId: string]: number }
+  habitStreaks            Json     // { [habitId: string]: number }
+  mostProductiveTimeSlot  Json?    // { day: string, timeRange: string, productivity: number }
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure one summary per user per week
+  @@unique([userId, weekStart])
+  @@map("weekly_summaries")
+}
+
+// Timer sessions for actual time tracking
+model TimerSession {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  timeBlockId  Int
+  startTime    DateTime
+  endTime      DateTime?
+  isActive     Boolean   @default(true)
+  actualMinutes Int      @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relationships
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeBlock TimeBlock @relation(fields: [timeBlockId], references: [id], onDelete: Cascade)
+
+  @@map("timer_sessions")
+}
+
+// Enums
+enum DeadlinePriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskType {
+  READING
+  CODING
+  WRITING
+  PSET
+  OTHER
+}
+
+enum BreakType {
+  SHORT
+  LONG
+}
