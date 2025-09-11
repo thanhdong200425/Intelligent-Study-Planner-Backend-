@@ -57,71 +57,6 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
-## Study Planner API (NestJS + Prisma)
-
-### Quick start
-
-```bash
-# 1) Install deps
-yarn install
-
-# 2) Configure database URL (Postgres)
-#    Set DATABASE_URL in .env, e.g.
-#    DATABASE_URL="postgresql://user:pass@localhost:5432/study_planner?schema=public"
-
-# 3) Generate Prisma client and run migrations
-yarn db:generate
-yarn db:migrate
-
-# 4) Seed demo data (optional)
-yarn db:seed
-
-# 5) Run the server
-yarn start:dev
-```
-
-The server starts on `http://localhost:3000`.
-
-### Modular structure
-
-- `src/courses`: Courses CRUD
-- `src/deadlines`: Deadlines CRUD (list by `courseId`)
-- `src/tasks`: Tasks CRUD with `status` filter (`open|completed`)
-- `src/availability`: Weekly recurring Availability windows (create/list/delete)
-- `src/habits`: Habits create/list and `POST /habits/:id/check-in`
-
-### Example requests
-
-- Create course
-```bash
-curl -X POST 'http://localhost:3000/courses?userId=1' \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Algorithms","color":"#10b981"}'
-```
-
-- List deadlines for a course
-```bash
-curl 'http://localhost:3000/deadlines?userId=1&courseId=1'
-```
-
-- Create task
-```bash
-curl -X POST 'http://localhost:3000/tasks?userId=1' \
-  -H 'Content-Type: application/json' \
-  -d '{"title":"Read ch2","courseId":1,"type":"READING","estimateMinutes":60}'
-```
-
-- Check in a habit
-```bash
-curl -X POST 'http://localhost:3000/habits/1/check-in?userId=1' \
-  -H 'Content-Type: application/json' \
-  -d '{"date":"2025-09-11","minutes":20}'
-```
-
-Notes:
-- `userId` is passed via query temporarily. Replace with auth when available.
-- All modules use Prisma with the schema in `prisma/schema.prisma`.
-
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
@@ -146,7 +81,6 @@ Check out a few resources that may come in handy when working with NestJS:
 - Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
 - Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
 - To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
 ## Support
 
