@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, ParseEnumPipe, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 import { TaskType } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { UserId } from '../common/user-id.decorator';
 
 class CreateTaskDto {
   @IsString() @MinLength(1) title!: string;
@@ -20,13 +22,14 @@ class UpdateTaskDto {
   @IsOptional() @IsBoolean() completed?: boolean;
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasks: TasksService) {}
 
   @Post()
-  create(@Query('userId') userId: string, @Body() body: CreateTaskDto) {
-    return this.tasks.create(Number(userId ?? 1), {
+  create(@UserId() userId: number, @Body() body: CreateTaskDto) {
+    return this.tasks.create(userId, {
       title: body.title,
       type: body.type,
       estimateMinutes: body.estimateMinutes,
@@ -36,13 +39,13 @@ export class TasksController {
   }
 
   @Get()
-  list(@Query('userId') userId: string, @Query('status') status?: 'open' | 'completed') {
-    return this.tasks.list(Number(userId ?? 1), status);
+  list(@UserId() userId: number, @Query('status') status?: 'open' | 'completed') {
+    return this.tasks.list(userId, status);
   }
 
   @Put(':id')
   update(
-    @Query('userId') userId: string,
+    @UserId() userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
@@ -51,11 +54,11 @@ export class TasksController {
     if (typeof body.deadlineId !== 'undefined') {
       data.deadline = body.deadlineId ? { connect: { id: body.deadlineId } } : { disconnect: true };
     }
-    return this.tasks.update(Number(userId ?? 1), id, data);
+    return this.tasks.update(userId, id, data);
   }
 
   @Delete(':id')
-  remove(@Query('userId') userId: string, @Param('id', ParseIntPipe) id: number) {
-    return this.tasks.remove(Number(userId ?? 1), id);
+  remove(@UserId() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.tasks.remove(userId, id);
   }
 }
