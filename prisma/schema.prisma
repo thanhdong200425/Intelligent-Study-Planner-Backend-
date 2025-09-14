@@ -12,24 +12,25 @@ datasource db {
 
 // User management
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  avatar    String?
+  id             Int     @id @default(autoincrement())
+  email          String  @unique
+  hashedPassword String  @map("hashed_password")
+  name           String?
+  avatar         String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships - all user data
-  courses           Course[]
-  deadlines         Deadline[]
-  tasks             Task[]
+  courses             Course[]
+  deadlines           Deadline[]
+  tasks               Task[]
   availabilityWindows AvailabilityWindow[]
-  timeBlocks        TimeBlock[]
-  habits            Habit[]
-  habitCompletions  HabitCompletion[]
-  weeklySummaries   WeeklySummary[]
-  timerSessions     TimerSession[]
+  timeBlocks          TimeBlock[]
+  habits              Habit[]
+  habitCompletions    HabitCompletion[]
+  weeklySummaries     WeeklySummary[]
+  timerSessions       TimerSession[]
 
   @@map("users")
 }
@@ -37,11 +38,11 @@ model User {
 // Core academic entities
 model Course {
   id        Int      @id @default(autoincrement())
-  userId    Int
+  userId    Int      @map("user_id")
   name      String
   color     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -52,15 +53,15 @@ model Course {
 }
 
 model Deadline {
-  id        Int            @id @default(autoincrement())
-  userId    Int
+  id        Int              @id @default(autoincrement())
+  userId    Int              @map("user_id")
   title     String
-  courseId  Int
-  dueDate   DateTime
+  courseId  Int              @map("course_id")
+  dueDate   DateTime         @map("due_date")
   priority  DeadlinePriority @default(MEDIUM)
-  completed Boolean        @default(false)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  completed Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
 
   // Relationships
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -72,21 +73,21 @@ model Deadline {
 
 model Task {
   id              Int      @id @default(autoincrement())
-  userId          Int
+  userId          Int      @map("user_id")
   title           String
-  courseId        Int
+  courseId        Int      @map("course_id")
   type            TaskType
-  estimateMinutes Int
-  deadlineId      Int?
+  estimateMinutes Int      @map("estimate_minutes")
+  deadlineId      Int?     @map("deadline_id")
   completed       Boolean  @default(false)
-  actualMinutes   Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  actualMinutes   Int?     @map("actual_minutes")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  deadline   Deadline?  @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  deadline   Deadline?   @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
   timeBlocks TimeBlock[]
 
   @@map("tasks")
@@ -95,12 +96,12 @@ model Task {
 // Scheduling and time management
 model AvailabilityWindow {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  dayOfWeek Int      // 0-6 (Sunday-Saturday)
-  startTime String   // HH:MM format
-  endTime   String   // HH:MM format
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    Int      @map("user_id")
+  dayOfWeek Int      @map("day_of_week") // 0-6 (Sunday-Saturday)
+  startTime String   @map("start_time") // HH:MM format
+  endTime   String   @map("end_time") // HH:MM format
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -109,17 +110,17 @@ model AvailabilityWindow {
 }
 
 model TimeBlock {
-  id            Int       @id @default(autoincrement())
-  userId        Int
-  taskId        Int?
-  startTime     DateTime
-  endTime       DateTime
-  isBreak       Boolean   @default(false)
-  breakType     BreakType?
-  actualMinutes Int?
-  completed     Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id            Int        @id @default(autoincrement())
+  userId        Int        @map("user_id")
+  taskId        Int?       @map("task_id")
+  startTime     DateTime   @map("start_time")
+  endTime       DateTime   @map("end_time")
+  isBreak       Boolean    @default(false) @map("is_break")
+  breakType     BreakType? @map("break_type")
+  actualMinutes Int?       @map("actual_minutes")
+  completed     Boolean    @default(false)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
 
   // Relationships
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -132,13 +133,13 @@ model TimeBlock {
 // Habit tracking
 model Habit {
   id            Int      @id @default(autoincrement())
-  userId        Int
+  userId        Int      @map("user_id")
   name          String
-  targetMinutes Int
-  currentStreak Int      @default(0)
-  longestStreak Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  targetMinutes Int      @map("target_minutes")
+  currentStreak Int      @default(0) @map("current_streak")
+  longestStreak Int      @default(0) @map("longest_streak")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -148,12 +149,12 @@ model Habit {
 }
 
 model HabitCompletion {
-  id      Int      @id @default(autoincrement())
-  userId  Int
-  habitId Int
-  date    DateTime @db.Date
-  minutes Int
-  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  habitId   Int      @map("habit_id")
+  date      DateTime @db.Date
+  minutes   Int
+  createdAt DateTime @default(now()) @map("created_at")
 
   // Relationships
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -166,19 +167,19 @@ model HabitCompletion {
 
 // Analytics and reporting
 model WeeklySummary {
-  id                      Int      @id @default(autoincrement())
-  userId                  Int
-  weekStart               DateTime @db.Date
-  weekEnd                 DateTime @db.Date
-  tasksCompleted          Int      @default(0)
-  tasksOverdue            Int      @default(0)
-  totalActualTime         Int      @default(0) // in minutes
-  totalPredictedTime      Int      @default(0) // in minutes
-  timePerCourse           Json     // { [courseId: string]: number }
-  habitStreaks            Json     // { [habitId: string]: number }
-  mostProductiveTimeSlot  Json?    // { day: string, timeRange: string, productivity: number }
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @map("user_id")
+  weekStart              DateTime @map("week_start") @db.Date
+  weekEnd                DateTime @map("week_end") @db.Date
+  tasksCompleted         Int      @default(0) @map("tasks_completed")
+  tasksOverdue           Int      @default(0) @map("tasks_overdue")
+  totalActualTime        Int      @default(0) @map("total_actual_time") // in minutes
+  totalPredictedTime     Int      @default(0) @map("total_predicted_time") // in minutes
+  timePerCourse          Json     @map("time_per_course") // { [courseId: string]: number }
+  habitStreaks           Json     @map("habit_streaks") // { [habitId: string]: number }
+  mostProductiveTimeSlot Json?    @map("most_productive_time_slot") // { day: string, timeRange: string, productivity: number }
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -190,15 +191,15 @@ model WeeklySummary {
 
 // Timer sessions for actual time tracking
 model TimerSession {
-  id           Int       @id @default(autoincrement())
-  userId       Int
-  timeBlockId  Int
-  startTime    DateTime
-  endTime      DateTime?
-  isActive     Boolean   @default(true)
-  actualMinutes Int      @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  timeBlockId   Int       @map("time_block_id")
+  startTime     DateTime  @map("start_time")
+  endTime       DateTime? @map("end_time")
+  isActive      Boolean   @default(true) @map("is_active")
+  actualMinutes Int       @default(0) @map("actual_minutes")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   // Relationships
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
