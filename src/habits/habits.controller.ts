@@ -1,18 +1,8 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { HabitsService } from './habits.service';
-import { IsDateString, IsInt, IsString, Min, MinLength } from 'class-validator';
+import { CreateHabitDto, CheckInDto } from './habits.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UserId } from '../common/user-id.decorator';
-
-class CreateHabitDto {
-  @IsString() @MinLength(1) name!: string;
-  @IsInt() @Min(1) targetMinutes!: number;
-}
-
-class CheckInDto {
-  @IsDateString() date!: string; // YYYY-MM-DD
-  @IsInt() @Min(1) minutes!: number;
-}
 
 @UseGuards(JwtAuthGuard)
 @Controller('habits')

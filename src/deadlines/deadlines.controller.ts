@@ -1,24 +1,8 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, MinLength } from 'class-validator';
 import { DeadlinesService } from './deadlines.service';
-import { DeadlinePriority } from '@prisma/client';
+import { CreateDeadlineDto, UpdateDeadlineDto } from './deadlines.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UserId } from '../common/user-id.decorator';
-
-class CreateDeadlineDto {
-  @IsString() @MinLength(1) title!: string;
-  @IsInt() courseId!: number;
-  @IsDateString() dueDate!: string;
-  @IsOptional() @IsEnum(DeadlinePriority) priority?: DeadlinePriority;
-}
-
-class UpdateDeadlineDto {
-  @IsOptional() @IsString() @MinLength(1) title?: string;
-  @IsOptional() @IsInt() courseId?: number;
-  @IsOptional() @IsDateString() dueDate?: string;
-  @IsOptional() @IsEnum(DeadlinePriority) priority?: DeadlinePriority;
-  @IsOptional() @IsBoolean() completed?: boolean;
-}
 
 @UseGuards(JwtAuthGuard)
 @Controller('deadlines')
