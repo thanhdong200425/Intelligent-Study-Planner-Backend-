@@ -1,13 +1,17 @@
 import { PrismaClient } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Hash a default password for the demo user
+  const hashedPassword = await argon2.hash('demo123');
+  
   // Basic seed with a single user
   const user = await prisma.user.upsert({
     where: { email: 'demo@example.com' },
     update: {},
-    create: { email: 'demo@example.com', name: 'Demo User' },
+    create: { email: 'demo@example.com', name: 'Demo User', hashedPassword },
   });
 
   // Ensure at least one course exists
