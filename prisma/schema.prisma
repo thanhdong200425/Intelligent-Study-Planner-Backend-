@@ -31,6 +31,7 @@ model User {
   habitCompletions    HabitCompletion[]
   weeklySummaries     WeeklySummary[]
   timerSessions       TimerSession[]
+  sessions            Session[]
 
   @@map("users")
 }
@@ -206,6 +207,22 @@ model TimerSession {
   timeBlock TimeBlock @relation(fields: [timeBlockId], references: [id], onDelete: Cascade)
 
   @@map("timer_sessions")
+}
+
+model Session {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  lastActivityAt    DateTime @default(now()) @map("last_activity_at") // for idle "sliding"
+  absoluteExpiresAt DateTime @map("absolute_expires_at") // hard capture
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([absoluteExpiresAt])
+  @@map("sessions")
 }
 
 // Enums
