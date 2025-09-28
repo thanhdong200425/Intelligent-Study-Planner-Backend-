@@ -11,7 +11,16 @@ import { AuthModule } from './auth/auth.module';
 import { SessionModule } from './session/session.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, CoursesModule, DeadlinesModule, TasksModule, AvailabilityModule, HabitsModule, SessionModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    CoursesModule,
+    DeadlinesModule,
+    TasksModule,
+    AvailabilityModule,
+    HabitsModule,
+    SessionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
