@@ -15,4 +15,9 @@ export class AuthController {
   register(@Body() body: RegisterDto) {
     return this.auth.register(body.email, body.password, body.name);
   }
+
+  @Post('check-type')
+  checkAuthType(@Body('email') email: string) {
+    return this.auth.checkAuthType(email);
+  }
 }

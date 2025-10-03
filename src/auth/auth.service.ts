@@ -61,4 +61,12 @@ export class AuthService {
 
     return { sessionId: newSession.id, absoluteSeconds: absDays * 24 * 3600 };
   }
+
+  async checkAuthType(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    return user ? 'login' : 'register';
+  }
 }
