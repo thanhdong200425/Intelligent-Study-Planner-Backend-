@@ -2,16 +2,30 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma';
 import * as argon2 from 'argon2';
-import { addDays } from 'date-fns';
+import { SessionService } from 'src/session/session.service';
+
+interface AuthResponse {
+  user: {
+    id: number;
+    email: string;
+    name: string | null;
+  };
+  rawToken: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
+    private readonly sessionService: SessionService,
   ) {}
 
-  async register(email: string, password: string, name?: string) {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<AuthResponse> {
     const currentUser = await this.prisma.user.findUnique({
       where: {
         email,
@@ -27,20 +41,19 @@ export class AuthService {
         hashedPassword,
         name,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = await this.jwt.signAsync(payload);
-    return { access_token: accessToken, userId: user.id };
+
+    const { rawToken } = await this.sessionService.issue(user.id.toString());
+
+    return { user, rawToken };
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ 
-    sessionId: number; 
-    absoluteSeconds: number;
-    user: { id: number; email: string; name: string | null };
-  }> {
+  async login(email: string, password: string): Promise<AuthResponse> {
     const user = await this.prisma.user.findUnique({
       where: { email },
       select: {
@@ -57,21 +70,10 @@ export class AuthService {
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials!');
 
-    const now = new Date();
-    const absDays = 14;
-    const expireDate = addDays(now, absDays);
-    const newSession = await this.prisma.session.create({
-      data: {
-        userId: user.id,
-        lastActivityAt: now,
-        absoluteExpiresAt: expireDate,
-      },
-      select: { id: true },
-    });
+    const { rawToken } = await this.sessionService.issue(user.id.toString());
 
-    return { 
-      sessionId: newSession.id,
-      absoluteSeconds: absDays * 24 * 3600,
+    return {
+      rawToken,
       user: {
         id: user.id,
         email: user.email,
