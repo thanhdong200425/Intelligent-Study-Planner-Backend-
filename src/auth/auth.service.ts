@@ -36,9 +36,19 @@ export class AuthService {
   async login(
     email: string,
     password: string,
-  ): Promise<{ sessionId: number; absoluteSeconds: number }> {
+  ): Promise<{ 
+    sessionId: number; 
+    absoluteSeconds: number;
+    user: { id: number; email: string; name: string | null };
+  }> {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        hashedPassword: true,
+      },
     });
 
     if (!user) throw new UnauthorizedException('Invalid credentials!');
@@ -59,7 +69,15 @@ export class AuthService {
       select: { id: true },
     });
 
-    return { sessionId: newSession.id, absoluteSeconds: absDays * 24 * 3600 };
+    return { 
+      sessionId: newSession.id,
+      absoluteSeconds: absDays * 24 * 3600,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    };
   }
 
   async checkAuthType(email: string) {
@@ -68,5 +86,15 @@ export class AuthService {
       select: { id: true },
     });
     return user ? 'login' : 'register';
+  }
+
+  async logout(userId: number, sessionId: number) {
+    await this.prisma.session.deleteMany({
+      where: {
+        id: sessionId,
+        userId: userId,
+      },
+    });
+    return { success: true };
   }
 }
