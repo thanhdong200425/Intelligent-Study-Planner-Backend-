@@ -120,7 +120,8 @@ export class SessionService {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS'),
+      maxAge:
+        Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
     });
   }
 
