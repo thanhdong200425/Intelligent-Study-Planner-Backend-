@@ -4,8 +4,7 @@ import { SessionService } from './session.service';
 import { PrismaService } from 'src/prisma';
 import Redis from 'ioredis';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-export const REDIS = 'REDIS';
+import { REDIS } from './session.constants';
 
 @Module({
   imports: [ConfigModule],
@@ -33,6 +32,7 @@ export const REDIS = 'REDIS';
           enableReadyCheck: true,
         });
       },
+      inject: [ConfigService],
     },
   ],
   exports: [REDIS, SessionService],

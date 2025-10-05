@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Response } from 'express';
-import { REDIS } from './session.module';
+import { REDIS } from './session.constants';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
