@@ -15,7 +15,7 @@ import { REDIS } from './session.constants';
     {
       provide: REDIS,
       useFactory: (configService: ConfigService) => {
-        const redisUrl = configService.get('REDIS_URL');
+        const redisUrl = configService.get<string>('REDIS_URL');
         if (redisUrl) {
           return new Redis(redisUrl, {
             lazyConnect: true,

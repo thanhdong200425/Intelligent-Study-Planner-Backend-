@@ -16,6 +16,8 @@ import { AuthModule } from './auth/auth.module';
 import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
 import { SessionMiddleware } from './session/session.middleware';
+import { MailModule } from './mail/mail.module';
+import { OtpService } from './otp/otp.service';
 
 @Module({
   imports: [
@@ -30,9 +32,10 @@ import { SessionMiddleware } from './session/session.middleware';
     AvailabilityModule,
     HabitsModule,
     SessionModule,
+    MailModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, OtpService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

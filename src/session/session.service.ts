@@ -29,7 +29,7 @@ export class SessionService {
   }
 
   private key(hash: string) {
-    const sessionKey = this.configService.get('SESSION_COOKIE_NAME');
+    const sessionKey = this.configService.get<string>('SESSION_COOKIE_NAME');
     if (!sessionKey) throw new Error('SESSION_COOKIE_NAME is not set');
     return `${sessionKey}:${hash}`;
   }
@@ -52,13 +52,15 @@ export class SessionService {
   }
 
   private idleTtl() {
-    const idleTtl = this.configService.get('SESSION_IDLE_TTL_SECONDS');
+    const idleTtl = this.configService.get<string>('SESSION_IDLE_TTL_SECONDS');
     if (!idleTtl) throw new Error('SESSION_IDLE_TTL_SECONDS is not set');
     return Number(idleTtl);
   }
 
   private absoluteTtl() {
-    const absoluteTtl = this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS');
+    const absoluteTtl = this.configService.get<string>(
+      'SESSION_ABSOLUTE_TTL_SECONDS',
+    );
     if (!absoluteTtl)
       throw new Error('SESSION_ABSOLUTE_TTL_SECONDS is not set');
     return Number(absoluteTtl);
