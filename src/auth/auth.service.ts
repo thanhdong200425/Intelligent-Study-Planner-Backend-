@@ -34,6 +34,8 @@ export class AuthService {
 
     if (currentUser) throw new UnauthorizedException('User already exists');
 
+    // Verify user through OTP service
+
     const hashedPassword = await argon2.hash(password);
     const user = await this.prisma.user.create({
       data: {
