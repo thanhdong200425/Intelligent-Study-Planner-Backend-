@@ -17,6 +17,7 @@ import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
 import { SessionMiddleware } from './session/session.middleware';
 import { MailModule } from './mail/mail.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MailModule } from './mail/mail.module';
     HabitsModule,
     SessionModule,
     MailModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -51,6 +53,10 @@ export class AppModule implements NestModule {
         },
         {
           path: 'auth/check-type',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'auth/register/verify-otp',
           method: RequestMethod.POST,
         },
       )

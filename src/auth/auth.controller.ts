@@ -49,15 +49,26 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(
-    @Body() body: RegisterDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async register(@Body() body: RegisterDto) {
     const result = await this.auth.register(
       body.email,
       body.password,
       body.name,
     );
+
+    return {
+      status: result.status,
+      statusCode: 200,
+    };
+  }
+
+  @Post('register/verify-otp')
+  async verifyOtpForRegistration(
+    @Body('email') email: string,
+    @Body('otp') otp: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.auth.verifyRegistration(email, otp);
 
     this.sessionService.setSessionCookie(res, result.rawToken);
 

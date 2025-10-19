@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma';
 import { SessionModule } from '../session/session.module';
+import { MailModule } from 'src/mail/mail.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { SessionModule } from '../session/session.module';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: jwtConstants.expiresIn },
     }),
+    MailModule,
+    RedisModule,
   ],
   providers: [JwtStrategy, AuthService],
   controllers: [AuthController],
