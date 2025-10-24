@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Delete,
-  UseGuards,
-  Res,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';

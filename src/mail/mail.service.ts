@@ -1,28 +1,25 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { REDIS } from 'src/session/session.constants';
 import Redis from 'ioredis';
 import { randomInt } from 'crypto';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
   private readonly logger = new Logger(MailService.name, { timestamp: true });
+  private readonly resend: Resend;
 
   constructor(
     private readonly configService: ConfigService,
     @Inject(REDIS) private readonly redis: Redis,
   ) {
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get('SMTP_HOST'),
-      port: Number(this.configService.get('SMTP_PORT')),
-      secure: true,
-      auth: {
-        user: this.configService.get('MAIL_SENDER'),
-        pass: this.configService.get('MAIL_PASSWORD'),
-      },
-    });
+    const apiKey = this.configService.get<string>('RESEND_KEY');
+    if (!apiKey) {
+      this.logger.error('Resend key is not set.');
+      throw new Error('Resend key is not set in configuration.');
+    }
+    this.resend = new Resend(apiKey);
   }
 
   async sendOtp(email: string): Promise<{
@@ -36,14 +33,33 @@ export class MailService {
         <div style="font-size:28px; font-weight:700; letter-spacing:4px">${code}</div>
         <p>This code expires in 10 minutes.</p>
       </div>`;
+    const senderEmail = this.configService.get<string>('FROM_EMAIL');
+    const senderName = this.configService.get<string>('FROM_EMAIL_NAME');
+    if (!senderEmail) {
+      this.logger.error('MAIL_SENDER is not set.');
+      return { status: false };
+    }
 
-    // If connection ok, it will send the email
-    await this.transporter.sendMail({
-      from: this.configService.get('MAIL_SENDER'),
-      to: email,
-      subject: 'Your verification code',
-      html: template,
-    });
+    const from = senderName ? `${senderName} <${senderEmail}>` : senderEmail;
+
+    try {
+      const { error } = await this.resend.emails.send({
+        from,
+        to: email,
+        subject: 'Your verification code',
+        html: template,
+      });
+
+      if (error) {
+        this.logger.error(`Failed to send email: ${error.message}`, error);
+        return { status: false };
+      }
+
+      this.logger.log(`Email sent to ${email}`);
+    } catch (error) {
+      this.logger.error(`Exception during email sending: ${error}`);
+      return { status: false };
+    }
 
     // Store OTP in Redis with 10 minutes expiration
     const otpStatus = await this.redis.set(`otp:${email}`, code, 'EX', 600);
@@ -56,7 +72,6 @@ export class MailService {
 
     return {
       status: true,
-      code,
     };
   }
 
