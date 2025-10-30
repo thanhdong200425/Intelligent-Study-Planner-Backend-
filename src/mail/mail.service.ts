@@ -4,22 +4,53 @@ import { REDIS } from 'src/session/session.constants';
 import Redis from 'ioredis';
 import { randomInt } from 'crypto';
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name, { timestamp: true });
-  private readonly resend: Resend;
+  private resend?: Resend;
+  private smtpTransporter?: nodemailer.Transporter;
 
   constructor(
     private readonly configService: ConfigService,
     @Inject(REDIS) private readonly redis: Redis,
   ) {
-    const apiKey = this.configService.get<string>('RESEND_KEY');
-    if (!apiKey) {
-      this.logger.error('Resend key is not set.');
-      throw new Error('Resend key is not set in configuration.');
+    const provider =
+      (this.configService.get<string>('NODE_ENV') === 'production'
+        ? 'resend'
+        : 'smtp');
+
+    if (provider === 'resend') {
+      const apiKey = this.configService.get<string>('RESEND_KEY');
+      if (!apiKey) {
+        this.logger.error('RESEND_KEY is not set. Falling back to SMTP if configured.');
+      } else {
+        this.resend = new Resend(apiKey);
+        this.logger.log('Mail provider initialized: Resend');
+      }
     }
-    this.resend = new Resend(apiKey);
+
+    if (!this.resend) {
+      const host = this.configService.get<string>('SMTP_HOST');
+      const port = this.configService.get<number>('SMTP_PORT' as any);
+      const user = this.configService.get<string>('MAIL_SENDER');
+      const pass = this.configService.get<string>('MAIL_PASSWORD');
+
+      if (host && port && user && pass) {
+        this.smtpTransporter = nodemailer.createTransport({
+          host,
+          port: Number(port),
+          secure: true,
+          auth: { user, pass },
+        });
+        this.logger.log('Mail provider initialized: SMTP');
+      } else {
+        this.logger.warn(
+          'SMTP is not fully configured (SMTP_HOST/PORT/MAIL_SENDER/MAIL_PASSWORD). Email sending will fail until configured.'
+        );
+      }
+    }
   }
 
   async sendOtp(email: string): Promise<{
@@ -43,19 +74,32 @@ export class MailService {
     const from = senderName ? `${senderName} <${senderEmail}>` : senderEmail;
 
     try {
-      const { error } = await this.resend.emails.send({
-        from,
-        to: email,
-        subject: 'Your verification code',
-        html: template,
-      });
+      if (this.resend) {
+        const { error } = await this.resend.emails.send({
+          from,
+          to: email,
+          subject: 'Your verification code',
+          html: template,
+        });
 
-      if (error) {
-        this.logger.error(`Failed to send email: ${error.message}`, error);
+        if (error) {
+          this.logger.error(`Failed to send email via Resend: ${error.message}`, error);
+          return { status: false };
+        }
+
+        this.logger.log(`Email sent via Resend to ${email}`);
+      } else if (this.smtpTransporter) {
+        await this.smtpTransporter.sendMail({
+          from,
+          to: email,
+          subject: 'Your verification code',
+          html: template,
+        });
+        this.logger.log(`Email sent via SMTP to ${email}`);
+      } else {
+        this.logger.error('No mail provider is configured.');
         return { status: false };
       }
-
-      this.logger.log(`Email sent to ${email}`);
     } catch (error) {
       this.logger.error(`Exception during email sending: ${error}`);
       return { status: false };
@@ -72,6 +116,7 @@ export class MailService {
 
     return {
       status: true,
+      code,
     };
   }
 
