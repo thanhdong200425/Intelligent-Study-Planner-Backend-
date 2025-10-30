@@ -59,6 +59,10 @@ export class AppModule implements NestModule {
           path: 'auth/register/verify-otp',
           method: RequestMethod.POST,
         },
+        {
+          path: '*',
+          method: RequestMethod.OPTIONS,
+        },
       )
       .forRoutes('*');
   }

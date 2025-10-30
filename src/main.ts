@@ -21,13 +21,15 @@ async function bootstrap() {
   app.enableCors({
     origin:
       process.env.NODE_ENV === 'production'
-        ? false
+        ? process.env.CORS_ORIGIN
+          ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+          : false
         : [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:3001',
-          ],
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:3001',
+        ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
