@@ -121,7 +121,7 @@ export class SessionService {
       res.cookie('sid', rawToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: "none",
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         maxAge:
           Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
