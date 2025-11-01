@@ -18,7 +18,7 @@ export class SessionService {
   constructor(
     @Inject(REDIS) private readonly redis: Redis,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   b64url(buf: Buffer) {
     return buf
@@ -120,7 +120,7 @@ export class SessionService {
     res.cookie('sid', rawToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: "none",
       path: '/',
       maxAge:
         Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
