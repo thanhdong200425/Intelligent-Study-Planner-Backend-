@@ -22,7 +22,7 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly configService: ConfigService,
     private readonly sessionService: SessionService,
-  ) {}
+  ) { }
 
   @Post('login')
   async login(

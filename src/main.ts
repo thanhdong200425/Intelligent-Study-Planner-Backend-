@@ -19,6 +19,14 @@ async function bootstrap() {
     }),
   );
 
+  // Trust proxy - MUST be set before CORS
+  // This tells Express to trust the X-Forwarded-* headers from nginx
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  } else {
+    app.set('trust proxy', 1);
+  }
+
   app.enableCors({
     origin:
       process.env.NODE_ENV === 'production'
@@ -36,7 +44,6 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
-  app.set('trust proxy', 1);
   app.use(cookieParser());
 
   // Swagger configuration
