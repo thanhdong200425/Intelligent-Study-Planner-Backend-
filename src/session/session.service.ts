@@ -117,14 +117,18 @@ export class SessionService {
 
   // Cookie helpers centralize cookie configuration used across controllers
   setSessionCookie(res: Response, rawToken: string): void {
-    res.cookie('sid', rawToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: "none",
-      path: '/',
-      maxAge:
-        Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
-    });
+    try {
+      res.cookie('sid', rawToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: "none",
+        path: '/',
+        maxAge:
+          Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
+      });
+    } catch (error) {
+      console.error('Error setting session cookie', error);
+    }
   }
 
   clearSessionCookie(res: Response): void {
