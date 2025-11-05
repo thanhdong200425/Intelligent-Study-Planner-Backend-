@@ -19,8 +19,6 @@ async function bootstrap() {
     }),
   );
 
-  // Trust proxy - MUST be set before CORS
-  // This tells Express to trust the X-Forwarded-* headers from nginx
   if (process.env.NODE_ENV === 'production') {
     app.set('trust proxy', 'loopback, linklocal, uniquelocal');
   } else {
@@ -35,9 +33,7 @@ async function bootstrap() {
           : false
         : [
           'http://localhost:3000',
-          'http://localhost:3001',
           'http://127.0.0.1:3000',
-          'http://127.0.0.1:3001',
         ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

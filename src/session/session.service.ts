@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import { REDIS } from './session.constants';
 import Redis from 'ioredis';
@@ -15,10 +15,12 @@ interface SessionData {
 
 @Injectable()
 export class SessionService {
+  private readonly logger = new Logger(SessionService.name, { timestamp: true });
   constructor(
     @Inject(REDIS) private readonly redis: Redis,
     private readonly configService: ConfigService,
-  ) { }
+  ) {
+  }
 
   b64url(buf: Buffer) {
     return buf
