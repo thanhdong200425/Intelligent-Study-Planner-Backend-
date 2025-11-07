@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { jwtConstants } from './constants';
-import { JwtStrategy } from './jwt.strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma';
 import { SessionModule } from '../session/session.module';
 import { MailModule } from 'src/mail/mail.module';
 import { RedisModule } from 'src/redis/redis.module';
+import { RefreshTokenStrategy } from './refresh-token.strategy';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { RedisModule } from 'src/redis/redis.module';
     MailModule,
     RedisModule,
   ],
-  providers: [JwtStrategy, AuthService],
+  providers: [AuthService, RefreshTokenStrategy],
   controllers: [AuthController],
   exports: [JwtModule],
 })

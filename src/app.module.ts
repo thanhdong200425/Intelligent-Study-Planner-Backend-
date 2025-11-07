@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma';
@@ -15,7 +10,6 @@ import { HabitsModule } from './habits/habits.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
-import { SessionMiddleware } from './session/session.middleware';
 import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
 
@@ -39,31 +33,5 @@ import { RedisModule } from './redis/redis.module';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(SessionMiddleware)
-      .exclude(
-        {
-          path: 'auth/login',
-          method: RequestMethod.POST,
-        },
-        {
-          path: 'auth/register',
-          method: RequestMethod.POST,
-        },
-        {
-          path: 'auth/check-type',
-          method: RequestMethod.POST,
-        },
-        {
-          path: 'auth/register/verify-otp',
-          method: RequestMethod.POST,
-        },
-        {
-          path: '*',
-          method: RequestMethod.OPTIONS,
-        },
-      )
-      .forRoutes('*');
-  }
+  configure(consumer: MiddlewareConsumer) {}
 }

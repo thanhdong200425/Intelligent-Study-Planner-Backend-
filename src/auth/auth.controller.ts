@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
@@ -7,13 +15,14 @@ import { UserId } from '../common/user-id.decorator';
 import { ConfigService } from '@nestjs/config';
 import { SessionService } from '../session/session.service';
 
-interface LoginResponse {
+interface AuthResponse {
   user: {
     id: number;
     email: string;
     name: string | null;
   };
   statusCode: number;
+  accessToken: string;
 }
 
 @Controller('auth')
@@ -22,21 +31,22 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly configService: ConfigService,
     private readonly sessionService: SessionService,
-  ) { }
+  ) {}
 
   @Post('login')
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<LoginResponse> {
+  ): Promise<AuthResponse> {
     const result = await this.auth.login(body.email, body.password);
 
     // Set httpOnly cookie that middleware can read
-    this.sessionService.setSessionCookie(res, result.rawToken);
+    this.sessionService.setRefreshTokenCookie(res, result.refreshToken!);
 
     return {
       user: result.user,
       statusCode: 200,
+      accessToken: result.accessToken,
     };
   }
 
@@ -59,14 +69,15 @@ export class AuthController {
     @Body('email') email: string,
     @Body('otp') otp: number,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<AuthResponse> {
     const result = await this.auth.verifyRegistration(email, otp);
 
-    this.sessionService.setSessionCookie(res, result.rawToken);
+    this.sessionService.setRefreshTokenCookie(res, result.refreshToken!);
 
     return {
       user: result.user,
       statusCode: 200,
+      accessToken: result.accessToken,
     };
   }
 
@@ -75,18 +86,37 @@ export class AuthController {
     return this.auth.checkAuthType(email);
   }
 
+  @Post('refresh')
+  @UseGuards(JwtAuthGuard)
+  async refresh(
+    @Req() req: Request & { user?: { sub: number; refreshToken: string } },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const user = req?.user; // From RefreshTokenStrategy
+
+    if (!user) throw new Error('User not found in request');
+
+    const result = await this.auth.refreshTokens(user.sub, user.refreshToken);
+
+    // Set new httpOnly refresh token cookie
+    this.sessionService.setRefreshTokenCookie(res, result.refreshToken);
+
+    return {
+      accessToken: result.accessToken,
+    };
+  }
+
   @Delete('logout')
   @UseGuards(JwtAuthGuard)
   // passthrough = true =>  Allows NestJS to still handle the response automatically
   async logout(
     @UserId() userId: number,
-    @Body('sessionId') sessionId: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.auth.logout(userId, sessionId);
+    const result = await this.auth.logout(userId);
 
     // Clear the cookie
-    this.sessionService.clearSessionCookie(res);
+    this.sessionService.clearRefreshTokenCookie(res);
 
     return result;
   }

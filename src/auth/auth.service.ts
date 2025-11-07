@@ -2,10 +2,10 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma';
 import * as argon2 from 'argon2';
-import { SessionService } from 'src/session/session.service';
 import { MailService } from 'src/mail/mail.service';
 import { REDIS } from 'src/session/session.constants';
 import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
 
 interface AuthResponse {
   user: {
@@ -13,7 +13,8 @@ interface AuthResponse {
     email: string;
     name: string | null;
   };
-  rawToken: string;
+  accessToken: string;
+  refreshToken?: string;
 }
 
 export interface BaseResponse {
@@ -26,9 +27,9 @@ export class AuthService {
   constructor(
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
-    private readonly sessionService: SessionService,
     private readonly mailService: MailService,
     @Inject(REDIS) private readonly redis: Redis,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(
@@ -88,10 +89,16 @@ export class AuthService {
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials!');
 
-    const { rawToken } = await this.sessionService.issue(user.id.toString());
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user.id,
+      user.email,
+    );
+
+    await this.updateRefreshTokenHash(user.id, refreshToken);
 
     return {
-      rawToken,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -108,12 +115,10 @@ export class AuthService {
     return user ? 'login' : 'register';
   }
 
-  async logout(userId: number, sessionId: number) {
-    await this.prisma.session.deleteMany({
-      where: {
-        id: sessionId,
-        userId: userId,
-      },
+  async logout(userId: number) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken: null },
     });
     return { success: true };
   }
@@ -148,8 +153,65 @@ export class AuthService {
     await this.redis.del(newUserKey);
 
     // Return session info
-    const { rawToken } = await this.sessionService.issue(newUser.id.toString());
+    const { accessToken, refreshToken } = await this.generateTokens(
+      newUser.id,
+      newUser.email,
+    );
 
-    return { user: newUser, rawToken };
+    return { user: newUser, accessToken, refreshToken };
+  }
+
+  private async generateTokens(userId: number, email: string) {
+    const payload = { sub: userId, email };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      // Access Token
+      this.jwt.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN'),
+      }),
+      // Refresh Token
+      this.jwt.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN'),
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  private async updateRefreshTokenHash(userId: number, refreshToken: string) {
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { hashedRefreshToken },
+    });
+  }
+
+  async refreshTokens(userId: number, oldRefreshToken: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.hashedRefreshToken) {
+      throw new UnauthorizedException('Access Denied');
+    }
+
+    const isMatch = await argon2.verify(
+      user.hashedRefreshToken,
+      oldRefreshToken,
+    );
+    if (!isMatch) {
+      throw new UnauthorizedException('Access Denied');
+    }
+
+    // Generate and store new tokens
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user.id,
+      user.email,
+    );
+    await this.updateRefreshTokenHash(user.id, refreshToken);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 }
