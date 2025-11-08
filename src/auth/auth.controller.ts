@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './jwt.guard';
 import { UserId } from '../common/user-id.decorator';
 import { ConfigService } from '@nestjs/config';
 import { SessionService } from '../session/session.service';
+import { RefreshTokenGuard } from './refresh-token.guard';
 
 interface AuthResponse {
   user: {
@@ -87,7 +88,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(RefreshTokenGuard)
   async refresh(
     @Req() req: Request & { user?: { sub: number; refreshToken: string } },
     @Res({ passthrough: true }) res: Response,

@@ -1,9 +1,19 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UserId } from '../common/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller('courses')
@@ -12,7 +22,10 @@ export class CoursesController {
 
   @Post()
   create(@UserId() userId: number, @Body() dto: CreateCourseDto) {
-    return this.courses.create(userId, { name: dto.name, color: dto.color } as any);
+    return this.courses.create(userId, {
+      name: dto.name,
+      color: dto.color,
+    } as any);
   }
 
   @Get()

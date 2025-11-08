@@ -25,7 +25,10 @@ export class SessionService {
   // Cookie helpers centralize cookie configuration used across controllers
   setRefreshTokenCookie(res: Response, refreshToken: string): void {
     try {
-      res.cookie('sid', refreshToken, {
+      const cookieName = this.configService.get<string>(
+        'REFRESH_TOKEN_COOKIE_NAME',
+      );
+      res.cookie(cookieName!, refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',

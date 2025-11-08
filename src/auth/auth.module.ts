@@ -9,6 +9,7 @@ import { SessionModule } from '../session/session.module';
 import { MailModule } from 'src/mail/mail.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { RefreshTokenStrategy } from './refresh-token.strategy';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { RefreshTokenStrategy } from './refresh-token.strategy';
     MailModule,
     RedisModule,
   ],
-  providers: [AuthService, RefreshTokenStrategy],
+  providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
   controllers: [AuthController],
   exports: [JwtModule],
 })

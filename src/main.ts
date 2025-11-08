@@ -8,7 +8,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['error', 'warn', 'log']
+    logger: ['error', 'warn', 'log'],
   });
 
   app.useGlobalPipes(
@@ -31,10 +31,7 @@ async function bootstrap() {
         ? process.env.CORS_ORIGIN
           ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
           : false
-        : [
-          'http://localhost:3000',
-          'http://127.0.0.1:3000',
-        ],
+        : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
