@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma';
-import { Prisma, TaskType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -19,21 +19,41 @@ export class TasksService {
 
   list(userId: number, status?: 'open' | 'completed') {
     return this.prisma.task.findMany({
-      where: { userId, ...(status ? { completed: status === 'completed' } : {}) },
+      where: {
+        userId,
+        ...(status ? { completed: status === 'completed' } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async update(userId: number, id: number, data: Prisma.TaskUpdateInput) {
-    const existing = await this.prisma.task.findFirst({ where: { id, userId } });
+    const existing = await this.prisma.task.findFirst({
+      where: { id, userId },
+    });
     if (!existing) throw new NotFoundException('Task not found');
     return this.prisma.task.update({ where: { id }, data });
   }
 
   async remove(userId: number, id: number) {
-    const existing = await this.prisma.task.findFirst({ where: { id, userId } });
+    const existing = await this.prisma.task.findFirst({
+      where: { id, userId },
+    });
     if (!existing) throw new NotFoundException('Task not found');
     await this.prisma.task.delete({ where: { id } });
     return { success: true };
+  }
+
+  async toggleComplete(userId: number, id: number) {
+    const existing = await this.prisma.task.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) throw new NotFoundException('Task not found');
+    const result = await this.prisma.task.update({
+      where: { id },
+      data: { completed: !existing.completed },
+    });
+
+    return result.completed;
   }
 }

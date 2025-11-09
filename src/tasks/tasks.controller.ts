@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
@@ -16,12 +28,17 @@ export class TasksController {
       type: body.type,
       estimateMinutes: body.estimateMinutes,
       course: { connect: { id: body.courseId } },
-      ...(body.deadlineId ? { deadline: { connect: { id: body.deadlineId } } } : {}),
+      ...(body.deadlineId
+        ? { deadline: { connect: { id: body.deadlineId } } }
+        : {}),
     } as any);
   }
 
   @Get()
-  list(@UserId() userId: number, @Query('status') status?: 'open' | 'completed') {
+  list(
+    @UserId() userId: number,
+    @Query('status') status?: 'open' | 'completed',
+  ) {
     return this.tasks.list(userId, status);
   }
 
@@ -34,9 +51,19 @@ export class TasksController {
     const data: any = { ...body };
     if (body.courseId) data.course = { connect: { id: body.courseId } };
     if (typeof body.deadlineId !== 'undefined') {
-      data.deadline = body.deadlineId ? { connect: { id: body.deadlineId } } : { disconnect: true };
+      data.deadline = body.deadlineId
+        ? { connect: { id: body.deadlineId } }
+        : { disconnect: true };
     }
     return this.tasks.update(userId, id, data);
+  }
+
+  @Patch(':id/toggle-complete')
+  toggleComplete(
+    @UserId() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.tasks.toggleComplete(userId, id);
   }
 
   @Delete(':id')

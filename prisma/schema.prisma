@@ -75,17 +75,18 @@ model Deadline {
 }
 
 model Task {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")
+  id              Int          @id @default(autoincrement())
+  userId          Int          @map("user_id")
   title           String
-  courseId        Int      @map("course_id")
+  courseId        Int          @map("course_id")
   type            TaskType
-  estimateMinutes Int      @map("estimate_minutes")
-  deadlineId      Int?     @map("deadline_id")
-  completed       Boolean  @default(false)
-  actualMinutes   Int?     @map("actual_minutes")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  estimateMinutes Int          @map("estimate_minutes")
+  deadlineId      Int?         @map("deadline_id")
+  completed       Boolean      @default(false)
+  actualMinutes   Int?         @map("actual_minutes")
+  priority        TaskPriority @default(MEDIUM) @map("priority")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
 
   // Relationships
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -245,4 +246,11 @@ enum TaskType {
 enum BreakType {
   SHORT
   LONG
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  UNKNOWN
 }
