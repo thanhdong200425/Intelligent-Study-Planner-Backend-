@@ -15,6 +15,7 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UserId } from '../common/user-id.decorator';
+import { Prisma } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
@@ -48,7 +49,7 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
-    const data: any = { ...body };
+    const data: Prisma.TaskUpdateInput = { ...body };
     if (body.courseId) data.course = { connect: { id: body.courseId } };
     if (typeof body.deadlineId !== 'undefined') {
       data.deadline = body.deadlineId
