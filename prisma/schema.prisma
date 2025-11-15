@@ -84,7 +84,7 @@ model Task {
   deadlineId      Int?         @map("deadline_id")
   completed       Boolean      @default(false)
   actualMinutes   Int?         @map("actual_minutes")
-  priority        TaskPriority @default(MEDIUM) @map("priority")
+  priority        TaskPriority @default(medium) @map("priority")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
@@ -236,21 +236,21 @@ enum DeadlinePriority {
 }
 
 enum TaskType {
-  READING
-  CODING
-  WRITING
-  PSET
-  OTHER
+  reading
+  coding
+  writing
+  pset
+  other
 }
 
 enum BreakType {
-  SHORT
-  LONG
+  short
+  long
 }
 
 enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-  UNKNOWN
+  low
+  medium
+  high
+  unknown
 }
