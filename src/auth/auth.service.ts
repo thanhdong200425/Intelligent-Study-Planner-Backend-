@@ -30,7 +30,7 @@ export class AuthService {
     private readonly mailService: MailService,
     @Inject(REDIS) private readonly redis: Redis,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async register(
     email: string,
@@ -158,6 +158,8 @@ export class AuthService {
       newUser.email,
     );
 
+    await this.updateRefreshTokenHash(newUser.id, refreshToken);
+
     return { user: newUser, accessToken, refreshToken };
   }
 
@@ -194,10 +196,14 @@ export class AuthService {
       throw new UnauthorizedException('Access Denied');
     }
 
+    console.log('Old token from cookie (first 20 chars):', oldRefreshToken.substring(0, 20));
+    console.log('Stored hash (first 20 chars):', user.hashedRefreshToken.substring(0, 20));
+
     const isMatch = await argon2.verify(
       user.hashedRefreshToken,
       oldRefreshToken,
     );
+    // TODO: Fix bug here
     if (!isMatch) {
       throw new UnauthorizedException('Access Denied');
     }

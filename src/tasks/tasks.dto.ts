@@ -1,9 +1,10 @@
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
-import { TaskType } from '@prisma/client';
+import { TaskPriority, TaskType } from '@prisma/client';
 
 export class CreateTaskDto {
   @IsString() @MinLength(1) title!: string;
-  @IsInt() courseId!: number;
+  @IsOptional() @IsInt() courseId?: number;
+  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
   @IsEnum(TaskType) type!: TaskType;
   @IsInt() @Min(1) estimateMinutes!: number;
   @IsOptional() @IsInt() deadlineId?: number | null;

@@ -7,7 +7,7 @@ import { Request } from 'express';
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
-  'jwt-refresh', // This is a custom name for this strategy
+  'jwt-refresh', // Custom strategy name
 ) {
   constructor(private readonly configService: ConfigService) {
     const cookieName = configService.get<string>('REFRESH_TOKEN_COOKIE_NAME');
@@ -34,6 +34,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new Error('REFRESH_TOKEN_COOKIE_NAME must be defined');
 
     const refreshToken = req.cookies[cookieName] as string;
+    console.log('Cookie name:', cookieName);
+    console.log('All cookies:', req.cookies);
+    console.log('Refresh token from cookie:', refreshToken ? 'present' : 'missing');
+    console.log('Token payload:', payload);
 
     // The guard will attach { ...payload, refreshToken } to req.user
     return { ...payload, refreshToken };
