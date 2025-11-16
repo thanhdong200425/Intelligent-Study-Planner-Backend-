@@ -28,6 +28,7 @@ export class TasksController {
       title: body.title,
       type: body.type,
       estimateMinutes: body.estimateMinutes,
+      priority: body.priority,
       course: { connect: { id: body.courseId } },
       ...(body.deadlineId
         ? { deadline: { connect: { id: body.deadlineId } } }
@@ -49,11 +50,12 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
-    const data: Prisma.TaskUpdateInput = { ...body };
-    if (body.courseId) data.course = { connect: { id: body.courseId } };
-    if (typeof body.deadlineId !== 'undefined') {
-      data.deadline = body.deadlineId
-        ? { connect: { id: body.deadlineId } }
+    const { courseId, deadlineId, ...updateData } = body;
+    const data: Prisma.TaskUpdateInput = { ...updateData };
+    if (courseId) data.course = { connect: { id: courseId } };
+    if (typeof deadlineId !== 'undefined') {
+      data.deadline = deadlineId
+        ? { connect: { id: deadlineId } }
         : { disconnect: true };
     }
     return this.tasks.update(userId, id, data);

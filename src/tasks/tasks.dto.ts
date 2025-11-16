@@ -1,4 +1,12 @@
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { TaskPriority, TaskType } from '@prisma/client';
 
 export class CreateTaskDto {
@@ -17,4 +25,5 @@ export class UpdateTaskDto {
   @IsOptional() @IsInt() @Min(1) estimateMinutes?: number;
   @IsOptional() @IsInt() deadlineId?: number | null;
   @IsOptional() @IsBoolean() completed?: boolean;
+  @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
 }
