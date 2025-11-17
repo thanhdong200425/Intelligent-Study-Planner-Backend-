@@ -12,6 +12,7 @@ import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RedisModule } from './redis/redis.module';
     SessionModule,
     MailModule,
     RedisModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
