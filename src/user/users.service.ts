@@ -47,10 +47,17 @@ export class UsersService {
         ...(data.email !== undefined && { email: data.email }),
         ...(data.avatar !== undefined && { avatar: data.avatar }),
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     // Return user without sensitive fields
-    const { hashedPassword, ...userProfile } = updatedUser;
-    return userProfile;
+    return updatedUser;
   }
 }
