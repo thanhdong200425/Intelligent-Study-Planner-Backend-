@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 
 @Injectable()
@@ -10,17 +6,24 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getProfile(userId: number) {
-    const user = await this.prisma.user.findUnique({
+    const userInfo = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    if (!user) {
+    if (!userInfo) {
       throw new NotFoundException('User not found');
     }
 
     // Return user without sensitive fields
-    const { hashedPassword, ...userProfile } = user;
-    return userProfile;
+    return userInfo;
   }
 
   async updateProfile(
@@ -34,17 +37,6 @@ export class UsersService {
 
     if (!existingUser) {
       throw new NotFoundException('User not found');
-    }
-
-    // If email is being updated, check if it's already taken
-    if (data.email && data.email !== existingUser.email) {
-      const emailExists = await this.prisma.user.findUnique({
-        where: { email: data.email },
-      });
-
-      if (emailExists) {
-        throw new ConflictException('Email already exists');
-      }
     }
 
     // Update user

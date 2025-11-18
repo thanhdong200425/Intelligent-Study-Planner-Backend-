@@ -12,7 +12,7 @@ import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './user/users.module';
 
 @Module({
   imports: [
@@ -35,5 +35,6 @@ import { UsersModule } from './users/users.module';
   providers: [AppService],
 })
 export class AppModule implements NestModule {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   configure(consumer: MiddlewareConsumer) {}
 }
