@@ -13,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './user/users.module';
+import { TimerSessionModule } from './timer-session/timer-session.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UsersModule } from './user/users.module';
     MailModule,
     RedisModule,
     UsersModule,
+    TimerSessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

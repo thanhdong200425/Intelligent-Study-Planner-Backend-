@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { DeadlinesService } from './deadlines.service';
 import { CreateDeadlineDto, UpdateDeadlineDto } from './deadlines.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';

@@ -24,13 +24,17 @@ export class DeadlinesService {
   }
 
   async update(userId: number, id: number, data: Prisma.DeadlineUpdateInput) {
-    const existing = await this.prisma.deadline.findFirst({ where: { id, userId } });
+    const existing = await this.prisma.deadline.findFirst({
+      where: { id, userId },
+    });
     if (!existing) throw new NotFoundException('Deadline not found');
     return this.prisma.deadline.update({ where: { id }, data });
   }
 
   async remove(userId: number, id: number) {
-    const existing = await this.prisma.deadline.findFirst({ where: { id, userId } });
+    const existing = await this.prisma.deadline.findFirst({
+      where: { id, userId },
+    });
     if (!existing) throw new NotFoundException('Deadline not found');
     await this.prisma.deadline.delete({ where: { id } });
     return { success: true };

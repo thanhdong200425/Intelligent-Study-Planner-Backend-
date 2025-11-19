@@ -14,4 +14,3 @@ export class UpdateUserDto {
   @IsString()
   avatar?: string;
 }
-

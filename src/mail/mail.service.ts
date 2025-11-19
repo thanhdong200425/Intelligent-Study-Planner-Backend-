@@ -17,14 +17,16 @@ export class MailService {
     @Inject(REDIS) private readonly redis: Redis,
   ) {
     const provider =
-      (this.configService.get<string>('NODE_ENV') === 'production'
+      this.configService.get<string>('NODE_ENV') === 'production'
         ? 'resend'
-        : 'smtp');
+        : 'smtp';
 
     if (provider === 'resend') {
       const apiKey = this.configService.get<string>('RESEND_KEY');
       if (!apiKey) {
-        this.logger.error('RESEND_KEY is not set. Falling back to SMTP if configured.');
+        this.logger.error(
+          'RESEND_KEY is not set. Falling back to SMTP if configured.',
+        );
       } else {
         this.resend = new Resend(apiKey);
         this.logger.log('Mail provider initialized: Resend');
@@ -47,7 +49,7 @@ export class MailService {
         this.logger.log('Mail provider initialized: SMTP');
       } else {
         this.logger.warn(
-          'SMTP is not fully configured (SMTP_HOST/PORT/MAIL_SENDER/MAIL_PASSWORD). Email sending will fail until configured.'
+          'SMTP is not fully configured (SMTP_HOST/PORT/MAIL_SENDER/MAIL_PASSWORD). Email sending will fail until configured.',
         );
       }
     }
@@ -83,7 +85,10 @@ export class MailService {
         });
 
         if (error) {
-          this.logger.error(`Failed to send email via Resend: ${error.message}`, error);
+          this.logger.error(
+            `Failed to send email via Resend: ${error.message}`,
+            error,
+          );
           return { status: false };
         }
 

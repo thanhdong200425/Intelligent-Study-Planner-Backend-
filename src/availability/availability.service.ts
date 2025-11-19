@@ -16,11 +16,16 @@ export class AvailabilityService {
   }
 
   list(userId: number) {
-    return this.prisma.availabilityWindow.findMany({ where: { userId }, orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }] });
+    return this.prisma.availabilityWindow.findMany({
+      where: { userId },
+      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    });
   }
 
   async remove(userId: number, id: number) {
-    const existing = await this.prisma.availabilityWindow.findFirst({ where: { id, userId } });
+    const existing = await this.prisma.availabilityWindow.findFirst({
+      where: { id, userId },
+    });
     if (!existing) throw new NotFoundException('Availability window not found');
     await this.prisma.availabilityWindow.delete({ where: { id } });
     return { success: true };

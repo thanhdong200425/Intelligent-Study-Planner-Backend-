@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { HabitsService } from './habits.service';
 import { CreateHabitDto, CheckInDto } from './habits.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
@@ -11,7 +20,10 @@ export class HabitsController {
 
   @Post()
   create(@UserId() userId: number, @Body() body: CreateHabitDto) {
-    return this.habits.createHabit(userId, { name: body.name, targetMinutes: body.targetMinutes } as any);
+    return this.habits.createHabit(userId, {
+      name: body.name,
+      targetMinutes: body.targetMinutes,
+    } as any);
   }
 
   @Get()

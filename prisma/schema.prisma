@@ -93,6 +93,7 @@ model Task {
   course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
   deadline   Deadline?   @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
   timeBlocks TimeBlock[]
+  timerSessions TimerSession[]
 
   @@map("tasks")
 }
@@ -197,17 +198,19 @@ model WeeklySummary {
 model TimerSession {
   id            Int       @id @default(autoincrement())
   userId        Int       @map("user_id")
-  timeBlockId   Int       @map("time_block_id")
+  type          TimerSessionType @map("type") // To help and identify the productive of the user for AI features
+  timeBlockId   Int?       @map("time_block_id")
+  taskId        Int?       @map("task_id")
   startTime     DateTime  @map("start_time")
   endTime       DateTime? @map("end_time")
-  isActive      Boolean   @default(true) @map("is_active")
   actualMinutes Int       @default(0) @map("actual_minutes")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   // Relationships
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timeBlock TimeBlock @relation(fields: [timeBlockId], references: [id], onDelete: Cascade)
+  timeBlock TimeBlock? @relation(fields: [timeBlockId], references: [id], onDelete: Cascade)
+  task      Task?      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("timer_sessions")
 }
@@ -253,4 +256,10 @@ enum TaskPriority {
   medium
   high
   unknown
+}
+
+enum TimerSessionType {
+  focus
+  break
+  long_break
 }
