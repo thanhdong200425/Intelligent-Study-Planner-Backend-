@@ -29,7 +29,7 @@ export class TasksController {
       type: body.type,
       estimateMinutes: body.estimateMinutes,
       priority: body.priority,
-      course: { connect: { id: body.courseId } },
+      ...(body.courseId ? { course: { connect: { id: body.courseId } } } : {}),
       ...(body.deadlineId
         ? { deadline: { connect: { id: body.deadlineId } } }
         : {}),

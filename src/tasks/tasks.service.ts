@@ -11,7 +11,7 @@ export class TasksService {
       data: {
         ...data,
         user: { connect: { id: userId } },
-        course: { connect: { id: (data as any).course?.connect?.id } },
+        ...(data.course ? { course: data.course } : {}),
         ...(data.deadline ? { deadline: data.deadline } : {}),
       },
     });
