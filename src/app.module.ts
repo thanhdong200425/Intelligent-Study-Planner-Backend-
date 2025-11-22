@@ -15,23 +15,24 @@ import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './user/users.module';
 import { TimerSessionModule } from './timer-session/timer-session.module';
 
+import { SpotifyModule } from './spotify/spotify.module';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
-    CoursesModule,
-    DeadlinesModule,
-    TasksModule,
-    AvailabilityModule,
-    HabitsModule,
+    UsersModule,
     SessionModule,
+    TimerSessionModule,
+    TasksModule,
+    HabitsModule,
+    DeadlinesModule,
+    CoursesModule,
+    AvailabilityModule,
     MailModule,
     RedisModule,
-    UsersModule,
-    TimerSessionModule,
+    SpotifyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
