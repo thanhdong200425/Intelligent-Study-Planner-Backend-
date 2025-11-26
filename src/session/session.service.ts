@@ -33,6 +33,10 @@ export class SessionService {
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
+        domain:
+          process.env.NODE_ENV === 'production'
+            ? process.env.COOKIE_DOMAIN || undefined
+            : undefined,
         maxAge:
           Number(this.configService.get('SESSION_ABSOLUTE_TTL_SECONDS')) * 1000,
       });
