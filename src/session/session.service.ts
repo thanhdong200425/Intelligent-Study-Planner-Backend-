@@ -4,14 +4,6 @@ import { REDIS } from './session.constants';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 
-// interface SessionData {
-//   userId: string;
-//   issuedAt: number;
-//   lastActivityAt: number;
-//   absoluteExpiresAt: number;
-//   rotationCount: number;
-// }
-
 @Injectable()
 export class SessionService {
   private readonly logger = new Logger(SessionService.name, {
@@ -28,9 +20,6 @@ export class SessionService {
       const cookieName = this.configService.get<string>(
         'REFRESH_TOKEN_COOKIE_NAME',
       );
-      if (process.env.NODE_ENV === 'production') {
-        this.logger.log(`COOKIE_DOMAIN: ${process.env.COOKIE_DOMAIN}`);
-      }
       res.cookie(cookieName!, refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
