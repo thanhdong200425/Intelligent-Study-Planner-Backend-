@@ -29,7 +29,7 @@ export class SessionService {
         'REFRESH_TOKEN_COOKIE_NAME',
       );
       if (process.env.NODE_ENV === 'production') {
-        console.log('COOKIE_DOMAIN', process.env.COOKIE_DOMAIN);
+        this.logger.log(`COOKIE_DOMAIN: ${process.env.COOKIE_DOMAIN}`);
       }
       res.cookie(cookieName!, refreshToken, {
         httpOnly: true,
