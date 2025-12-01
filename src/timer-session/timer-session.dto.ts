@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/swagger';
 import { TimerSessionType } from '@prisma/client';
 import { IsDateString, IsEnum, IsInt, IsOptional } from 'class-validator';
 
@@ -15,4 +16,10 @@ export class CreateTimerSessionDto {
 
   @IsDateString()
   startTime!: string;
+}
+
+export class UpdateTimerSessionDto extends PartialType(CreateTimerSessionDto) {
+  @IsOptional()
+  @IsDateString()
+  endTime?: string;
 }

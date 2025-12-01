@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TimerSession, TimerSessionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma';
+import { UpdateTimerSessionDto } from './timer-session.dto';
 
 interface CreateTimerSessionData {
   userId: number;
@@ -27,6 +28,15 @@ export class TimerSessionService {
         user: { connect: { id: userId } },
         ...(taskId ? { task: { connect: { id: taskId } } } : {}),
         ...(timeBlockId ? { timeBlock: { connect: { id: timeBlockId } } } : {}),
+        ...data,
+      },
+    });
+  }
+
+  async update(id: number, data: UpdateTimerSessionDto): Promise<TimerSession> {
+    return await this.prisma.timerSession.update({
+      where: { id },
+      data: {
         ...data,
       },
     });
