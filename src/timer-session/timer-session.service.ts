@@ -31,4 +31,31 @@ export class TimerSessionService {
       },
     });
   }
+
+  async getTodaySessions(userId: number) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return await this.prisma.timerSession.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+      include: {
+        task: {
+          include: {
+            course: true,
+          },
+        },
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+  }
 }

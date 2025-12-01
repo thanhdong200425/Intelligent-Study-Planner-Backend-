@@ -17,13 +17,22 @@ export class TasksService {
     });
   }
 
-  list(userId: number, status?: 'open' | 'completed') {
+  list(userId: number, status?: 'open' | 'completed', includeCourse?: boolean) {
     return this.prisma.task.findMany({
       where: {
         userId,
         ...(status ? { completed: status === 'completed' } : {}),
       },
       orderBy: { createdAt: 'desc' },
+      include: includeCourse
+        ? {
+            course: {
+              select: {
+                name: true,
+              },
+            },
+          }
+        : {},
     });
   }
 

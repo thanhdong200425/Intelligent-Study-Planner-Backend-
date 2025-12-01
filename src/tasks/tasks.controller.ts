@@ -40,8 +40,9 @@ export class TasksController {
   list(
     @UserId() userId: number,
     @Query('status') status?: 'open' | 'completed',
+    @Query('includeCourse') includeCourse?: boolean,
   ) {
-    return this.tasks.list(userId, status);
+    return this.tasks.list(userId, status, includeCourse);
   }
 
   @Put(':id')

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { CreateTimerSessionDto } from './timer-session.dto';
 import { TimerSessionService } from './timer-session.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
@@ -17,5 +17,10 @@ export class TimerSessionController {
       timeBlockId: body.timeBlockId,
       data: { type: body.type, startTime: new Date(body.startTime) },
     });
+  }
+
+  @Get('today')
+  async getTodaySessions(@UserId() userId: number) {
+    return await this.timerSessionService.getTodaySessions(userId);
   }
 }
