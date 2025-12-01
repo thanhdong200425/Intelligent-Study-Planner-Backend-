@@ -29,11 +29,10 @@ model User {
   tasks               Task[]
   availabilityWindows AvailabilityWindow[]
   timeBlocks          TimeBlock[]
-  habits              Habit[]
-  habitCompletions    HabitCompletion[]
   weeklySummaries     WeeklySummary[]
   timerSessions       TimerSession[]
   sessions            Session[]
+  events              Event[]
 
   @@map("users")
 }
@@ -135,39 +134,33 @@ model TimeBlock {
   @@map("time_blocks")
 }
 
-// Habit tracking
-model Habit {
-  id            Int      @id @default(autoincrement())
-  userId        Int      @map("user_id")
-  name          String
-  targetMinutes Int      @map("target_minutes")
-  currentStreak Int      @default(0) @map("current_streak")
-  longestStreak Int      @default(0) @map("longest_streak")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+model Event {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  date        DateTime @map("date") @db.Date
+  startTime   DateTime @map("start_time") @db.Time
+  endTime     DateTime @map("end_time") @db.Time
+  title       String
+  note        String?
+  eventTypeId Int      @map("event_type_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  completions HabitCompletion[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType EventType? @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
 
-  @@map("habits")
+  @@map("events")
 }
 
-model HabitCompletion {
+model EventType {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  habitId   Int      @map("habit_id")
-  date      DateTime @db.Date
-  minutes   Int
+  name      String
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  events    Event[]
 
-  // Relationships
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
-
-  // Ensure one completion per habit per day
-  @@unique([habitId, date])
-  @@map("habit_completions")
+  @@map("event_types")
 }
 
 // Analytics and reporting
