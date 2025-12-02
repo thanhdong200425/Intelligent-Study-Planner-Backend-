@@ -33,6 +33,7 @@ model User {
   timerSessions       TimerSession[]
   sessions            Session[]
   events              Event[]
+  eventTypes          EventType[]
 
   @@map("users")
 }
@@ -155,10 +156,15 @@ model Event {
 
 model EventType {
   id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
   name      String
+  color     String   @default("#3b82f6") // Default blue color
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  events    Event[]
+
+  // Relationships
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
 
   @@map("event_types")
 }
