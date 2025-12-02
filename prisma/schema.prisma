@@ -94,6 +94,7 @@ model Task {
   deadline      Deadline?      @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
   timeBlocks    TimeBlock[]
   timerSessions TimerSession[]
+  events        Event[]
 
   @@map("tasks")
 }
@@ -144,12 +145,15 @@ model Event {
   title       String
   note        String?
   eventTypeId Int      @map("event_type_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  taskId      Int?     @map("task_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   eventType EventType? @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  task      Task?      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("events")
 }
