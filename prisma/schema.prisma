@@ -144,7 +144,7 @@ model Event {
   endTime     DateTime @map("end_time") @db.Time
   title       String
   note        String?
-  eventTypeId Int      @map("event_type_id")
+  eventTypeId Int?     @map("event_type_id")
   taskId      Int?     @map("task_id")
 
   createdAt DateTime @default(now()) @map("created_at")
