@@ -21,7 +21,7 @@ export class EventsService {
       startTime: start,
       endTime: end,
       user: { connect: { id: userId } },
-      eventType: { connect: { id: eventTypeId } },
+      ...(eventTypeId ? { eventType: { connect: { id: eventTypeId } } } : {}),
       ...(taskId ? { task: { connect: { id: taskId } } } : {}),
     };
 
