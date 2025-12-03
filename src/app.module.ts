@@ -15,6 +15,7 @@ import { UsersModule } from './user/users.module';
 import { TimerSessionModule } from './timer-session/timer-session.module';
 import { EventTypesModule } from './event-types/event-types.module';
 import { EventsModule } from './events/events.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 import { SpotifyModule } from './spotify/spotify.module';
 
@@ -32,6 +33,7 @@ import { SpotifyModule } from './spotify/spotify.module';
     AvailabilityModule,
     EventTypesModule,
     EventsModule,
+    AnalyticsModule,
     MailModule,
     RedisModule,
     SpotifyModule,
