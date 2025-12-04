@@ -34,8 +34,6 @@ export class AnalyticsService {
       },
     });
 
-    console.log('thisWeekSessions', thisWeekSessions);
-
     const studyHoursThisWeek =
       thisWeekSessions.reduce(
         (sum, session) => sum + session.durationMinutes,
