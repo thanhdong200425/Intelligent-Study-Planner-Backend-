@@ -199,16 +199,17 @@ model WeeklySummary {
 
 // Timer sessions for actual time tracking
 model TimerSession {
-  id              Int              @id @default(autoincrement())
-  userId          Int              @map("user_id")
-  type            TimerSessionType @map("type") // To help and identify the productive of the user for AI features
-  timeBlockId     Int?             @map("time_block_id")
-  taskId          Int?             @map("task_id")
-  startTime       DateTime         @map("start_time")
-  endTime         DateTime?        @map("end_time")
-  durationMinutes Int              @default(0) @map("duration_minutes")
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  id              Int                @id @default(autoincrement())
+  userId          Int                @map("user_id")
+  type            TimerSessionType   @map("type") // To help and identify the productive of the user for AIfeatures
+  timeBlockId     Int?               @map("time_block_id")
+  taskId          Int?               @map("task_id")
+  startTime       DateTime           @map("start_time")
+  endTime         DateTime?          @map("end_time")
+  durationMinutes Int                @default(0) @map("duration_minutes")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  status          TimerSessionStatus @default(active) @map("status")
 
   // Relationships
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -265,4 +266,10 @@ enum TimerSessionType {
   focus
   break
   long_break
+}
+
+enum TimerSessionStatus {
+  active
+  completed
+  stopped
 }

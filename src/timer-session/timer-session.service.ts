@@ -68,4 +68,23 @@ export class TimerSessionService {
       },
     });
   }
+
+  async getActiveSession(userId: number): Promise<TimerSession | null> {
+    return await this.prisma.timerSession.findFirst({
+      where: {
+        userId,
+        status: 'active',
+      },
+      include: {
+        task: {
+          include: {
+            course: true,
+          },
+        },
+      },
+      orderBy: {
+        startTime: 'desc',
+      },
+    });
+  }
 }

@@ -43,4 +43,9 @@ export class TimerSessionController {
   async getTodaySessions(@UserId() userId: number) {
     return await this.timerSessionService.getTodaySessions(userId);
   }
+
+  @Get('active')
+  async getActiveSession(@UserId() userId: number) {
+    return await this.timerSessionService.getActiveSession(userId);
+  }
 }

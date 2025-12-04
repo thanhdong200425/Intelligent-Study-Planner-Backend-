@@ -30,13 +30,15 @@ export class AnalyticsService {
         },
       },
       select: {
-        actualMinutes: true,
+        durationMinutes: true,
       },
     });
 
+    console.log('thisWeekSessions', thisWeekSessions);
+
     const studyHoursThisWeek =
       thisWeekSessions.reduce(
-        (sum, session) => sum + session.actualMinutes,
+        (sum, session) => sum + session.durationMinutes,
         0,
       ) / 60;
 
@@ -54,13 +56,13 @@ export class AnalyticsService {
         },
       },
       select: {
-        actualMinutes: true,
+        durationMinutes: true,
       },
     });
 
     const studyHoursLastWeek =
       lastWeekSessions.reduce(
-        (sum, session) => sum + session.actualMinutes,
+        (sum, session) => sum + session.durationMinutes,
         0,
       ) / 60;
 
@@ -84,13 +86,15 @@ export class AnalyticsService {
         },
       },
       select: {
-        actualMinutes: true,
+        durationMinutes: true,
       },
     });
 
     const totalStudyHours =
-      allTimeSessions.reduce((sum, session) => sum + session.actualMinutes, 0) /
-      60;
+      allTimeSessions.reduce(
+        (sum, session) => sum + session.durationMinutes,
+        0,
+      ) / 60;
 
     // 5. Total study hours 30 days ago for growth rate
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -106,13 +110,13 @@ export class AnalyticsService {
         },
       },
       select: {
-        actualMinutes: true,
+        durationMinutes: true,
       },
     });
 
     const totalStudyHoursThirtyDaysAgo =
       sessionsBeforeThirtyDays.reduce(
-        (sum, session) => sum + session.actualMinutes,
+        (sum, session) => sum + session.durationMinutes,
         0,
       ) / 60;
 
