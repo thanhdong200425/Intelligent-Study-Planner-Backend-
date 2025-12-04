@@ -22,4 +22,8 @@ export class UpdateTimerSessionDto extends PartialType(CreateTimerSessionDto) {
   @IsOptional()
   @IsDateString()
   endTime?: string;
+
+  @IsOptional()
+  @IsInt()
+  durationMinutes?: number;
 }

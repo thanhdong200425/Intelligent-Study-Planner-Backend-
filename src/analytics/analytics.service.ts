@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { TimerSessionType } from '@prisma/client';
 import { AnalyticsStatsDto } from './analytics.dto';
+import { startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 
 @Injectable()
 export class AnalyticsService {
@@ -10,14 +11,10 @@ export class AnalyticsService {
   async getStats(userId: number): Promise<AnalyticsStatsDto> {
     // Get date ranges
     const now = new Date();
-    const startOfThisWeek = this.getStartOfWeek(now);
-    const endOfThisWeek = this.getEndOfWeek(now);
-    const startOfLastWeek = this.getStartOfWeek(
-      new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-    );
-    const endOfLastWeek = this.getEndOfWeek(
-      new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-    );
+    const startOfThisWeek = startOfWeek(now);
+    const endOfThisWeek = endOfWeek(now);
+    const startOfLastWeek = startOfWeek(subWeeks(now, 1));
+    const endOfLastWeek = endOfWeek(subWeeks(now, 1));
 
     // 1. Study hours this week (from timer sessions)
     const thisWeekSessions = await this.prisma.timerSession.findMany({
@@ -143,21 +140,5 @@ export class AnalyticsService {
       totalStudyHoursGrowthRate: Math.round(totalStudyHoursGrowthRate),
       taskCompletionRate: Math.round(taskCompletionRate),
     };
-  }
-
-  private getStartOfWeek(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }
-
-  private getEndOfWeek(date: Date): Date {
-    const d = this.getStartOfWeek(date);
-    d.setDate(d.getDate() + 6);
-    d.setHours(23, 59, 59, 999);
-    return d;
   }
 }
