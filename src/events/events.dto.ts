@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/swagger';
 import {
   IsDateString,
   IsInt,
@@ -38,3 +39,5 @@ export class CreateEventDto {
   @IsString()
   note?: string;
 }
+
+export class UpdateEventDto extends PartialType(CreateEventDto) {}

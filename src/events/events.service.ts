@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma';
-import { CreateEventDto } from './events.dto';
+import { CreateEventDto, UpdateEventDto } from './events.dto';
 import { Prisma } from '@prisma/client';
 import { validateDate, validateTimeOrder } from '../utilities/dateUtilities';
 
@@ -53,5 +53,45 @@ export class EventsService {
 
     await this.prisma.event.delete({ where: { id } });
     return { success: true };
+  }
+
+  async update(userId: number, id: number, data: UpdateEventDto) {
+    const existing = await this.prisma.event.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const { date, startTime, endTime, ...rest } = data;
+
+    let dateOnly: Date | undefined = existing.date;
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    if (date) {
+      dateOnly = validateDate(date);
+    }
+
+    if (startTime && endTime) {
+      const { start: newStart, end: newEnd } = validateTimeOrder(
+        dateOnly,
+        startTime,
+        endTime,
+      );
+      start = newStart;
+      end = newEnd;
+    }
+
+    const dataToUpdate: Prisma.EventUpdateInput = {
+      ...(date ? { date: dateOnly } : {}),
+      ...(startTime && endTime ? { startTime: start, endTime: end } : {}),
+      ...rest,
+    };
+
+    return this.prisma.event.update({
+      where: { id },
+      data: dataToUpdate,
+    });
   }
 }
