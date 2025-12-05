@@ -1,5 +1,17 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { CreateTimerSessionDto } from './timer-session.dto';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  CreateTimerSessionDto,
+  UpdateTimerSessionDto,
+} from './timer-session.dto';
 import { TimerSessionService } from './timer-session.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { UserId } from 'src/common/user-id.decorator';
@@ -19,8 +31,21 @@ export class TimerSessionController {
     });
   }
 
+  @Patch(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateTimerSessionDto,
+  ) {
+    return await this.timerSessionService.update(id, body);
+  }
+
   @Get('today')
   async getTodaySessions(@UserId() userId: number) {
     return await this.timerSessionService.getTodaySessions(userId);
+  }
+
+  @Get('active')
+  async getActiveSession(@UserId() userId: number) {
+    return await this.timerSessionService.getActiveSession(userId);
   }
 }

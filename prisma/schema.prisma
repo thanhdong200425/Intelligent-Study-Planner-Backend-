@@ -29,11 +29,11 @@ model User {
   tasks               Task[]
   availabilityWindows AvailabilityWindow[]
   timeBlocks          TimeBlock[]
-  habits              Habit[]
-  habitCompletions    HabitCompletion[]
   weeklySummaries     WeeklySummary[]
   timerSessions       TimerSession[]
   sessions            Session[]
+  events              Event[]
+  eventTypes          EventType[]
 
   @@map("users")
 }
@@ -94,6 +94,7 @@ model Task {
   deadline      Deadline?      @relation(fields: [deadlineId], references: [id], onDelete: SetNull)
   timeBlocks    TimeBlock[]
   timerSessions TimerSession[]
+  events        Event[]
 
   @@map("tasks")
 }
@@ -135,39 +136,41 @@ model TimeBlock {
   @@map("time_blocks")
 }
 
-// Habit tracking
-model Habit {
-  id            Int      @id @default(autoincrement())
-  userId        Int      @map("user_id")
-  name          String
-  targetMinutes Int      @map("target_minutes")
-  currentStreak Int      @default(0) @map("current_streak")
-  longestStreak Int      @default(0) @map("longest_streak")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+model Event {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  date        DateTime @map("date") @db.Date
+  startTime   DateTime @map("start_time") @db.Time
+  endTime     DateTime @map("end_time") @db.Time
+  title       String
+  note        String?
+  eventTypeId Int?     @map("event_type_id")
+  taskId      Int?     @map("task_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  completions HabitCompletion[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType EventType? @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  task      Task?      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
-  @@map("habits")
+  @@map("events")
 }
 
-model HabitCompletion {
+model EventType {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  habitId   Int      @map("habit_id")
-  date      DateTime @db.Date
-  minutes   Int
+  name      String
+  color     String   @default("#3b82f6") // Default blue color
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
 
-  // Ensure one completion per habit per day
-  @@unique([habitId, date])
-  @@map("habit_completions")
+  @@map("event_types")
 }
 
 // Analytics and reporting
@@ -196,16 +199,17 @@ model WeeklySummary {
 
 // Timer sessions for actual time tracking
 model TimerSession {
-  id            Int              @id @default(autoincrement())
-  userId        Int              @map("user_id")
-  type          TimerSessionType @map("type") // To help and identify the productive of the user for AI features
-  timeBlockId   Int?             @map("time_block_id")
-  taskId        Int?             @map("task_id")
-  startTime     DateTime         @map("start_time")
-  endTime       DateTime?        @map("end_time")
-  actualMinutes Int              @default(0) @map("actual_minutes")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
+  id              Int                @id @default(autoincrement())
+  userId          Int                @map("user_id")
+  type            TimerSessionType   @map("type") // To help and identify the productive of the user for AIfeatures
+  timeBlockId     Int?               @map("time_block_id")
+  taskId          Int?               @map("task_id")
+  startTime       DateTime           @map("start_time")
+  endTime         DateTime?          @map("end_time")
+  durationMinutes Int                @default(0) @map("duration_minutes")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  status          TimerSessionStatus @default(active) @map("status")
 
   // Relationships
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -262,4 +266,10 @@ enum TimerSessionType {
   focus
   break
   long_break
+}
+
+enum TimerSessionStatus {
+  active
+  completed
+  stopped
 }

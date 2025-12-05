@@ -6,7 +6,6 @@ import { CoursesModule } from './courses/courses.module';
 import { DeadlinesModule } from './deadlines/deadlines.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AvailabilityModule } from './availability/availability.module';
-import { HabitsModule } from './habits/habits.module';
 import { AuthModule } from './auth/auth.module';
 import { SessionModule } from './session/session.module';
 import { ConfigModule } from '@nestjs/config';
@@ -14,6 +13,9 @@ import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './user/users.module';
 import { TimerSessionModule } from './timer-session/timer-session.module';
+import { EventTypesModule } from './event-types/event-types.module';
+import { EventsModule } from './events/events.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 import { SpotifyModule } from './spotify/spotify.module';
 
@@ -26,10 +28,12 @@ import { SpotifyModule } from './spotify/spotify.module';
     SessionModule,
     TimerSessionModule,
     TasksModule,
-    HabitsModule,
     DeadlinesModule,
     CoursesModule,
     AvailabilityModule,
+    EventTypesModule,
+    EventsModule,
+    AnalyticsModule,
     MailModule,
     RedisModule,
     SpotifyModule,
