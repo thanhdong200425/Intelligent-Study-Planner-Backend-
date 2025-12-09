@@ -11,6 +11,7 @@ import { TaskPriority, TaskType } from '@prisma/client';
 
 export class CreateTaskDto {
   @IsString() @MinLength(1) title!: string;
+  @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() courseId?: number;
   @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
   @IsEnum(TaskType) type!: TaskType;
@@ -20,6 +21,7 @@ export class CreateTaskDto {
 
 export class UpdateTaskDto {
   @IsOptional() @IsString() @MinLength(1) title?: string;
+  @IsOptional() @IsString() description?: string;
   @IsOptional() @IsInt() courseId?: number;
   @IsOptional() @IsEnum(TaskType) type?: TaskType;
   @IsOptional() @IsInt() @Min(1) estimateMinutes?: number;

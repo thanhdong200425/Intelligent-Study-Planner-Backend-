@@ -78,6 +78,7 @@ model Task {
   id              Int          @id @default(autoincrement())
   userId          Int          @map("user_id")
   title           String
+  description     String?      @map("description")
   courseId        Int?         @map("course_id")
   type            TaskType
   estimateMinutes Int          @map("estimate_minutes")
