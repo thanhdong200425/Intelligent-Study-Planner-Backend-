@@ -76,4 +76,9 @@ export class TasksController {
   remove(@UserId() userId: number, @Param('id', ParseIntPipe) id: number) {
     return this.tasks.remove(userId, id);
   }
+
+  @Post('add-multiple')
+  addMultiple(@UserId() userId: number, @Body() body: CreateTaskDto[]) {
+    return this.tasks.addMultiple(userId, body);
+  }
 }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { Prisma } from '@prisma/client';
+import { CreateTaskDto } from './tasks.dto';
 
 @Injectable()
 export class TasksService {
@@ -64,5 +65,26 @@ export class TasksService {
     });
 
     return result.completed;
+  }
+
+  async addMultiple(userId: number, data: CreateTaskDto[]) {
+    const createdTasks = [];
+
+    for (const task of data) {
+      const createdTask = await this.create(userId, {
+        title: task.title,
+        type: task.type,
+        priority: task.priority,
+        estimateMinutes: task.estimateMinutes ?? 60,
+        ...(task.description ? { description: task.description } : {}),
+        ...(task.deadlineId
+          ? { deadline: { connect: { id: task.deadlineId } } }
+          : {}),
+      } as any);
+
+      createdTasks.push(createdTask);
+    }
+
+    return createdTasks.length > 0 ? createdTasks : null;
   }
 }
