@@ -12,9 +12,10 @@ import { CreateTaskDto } from './tasks.dto';
 
 @Injectable()
 export class TaskImageService {
+  private readonly logger = new Logger(TaskImageService.name);
+
   constructor(
     private readonly geminiService: GeminiService,
-    private logger: Logger,
     private readonly tasksService: TasksService,
   ) {}
 
