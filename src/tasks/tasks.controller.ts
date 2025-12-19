@@ -33,6 +33,7 @@ export class TasksController {
       ...(body.deadlineId
         ? { deadline: { connect: { id: body.deadlineId } } }
         : {}),
+      ...(body.description ? { description: body.description } : {}),
     } as any);
   }
 
@@ -51,7 +52,7 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
-    const { courseId, deadlineId, ...updateData } = body;
+    const { courseId, deadlineId, description, ...updateData } = body;
     const data: Prisma.TaskUpdateInput = { ...updateData };
     if (courseId) data.course = { connect: { id: courseId } };
     if (typeof deadlineId !== 'undefined') {
@@ -59,6 +60,7 @@ export class TasksController {
         ? { connect: { id: deadlineId } }
         : { disconnect: true };
     }
+    if (description) data.description = description;
     return this.tasks.update(userId, id, data);
   }
 
@@ -73,5 +75,10 @@ export class TasksController {
   @Delete(':id')
   remove(@UserId() userId: number, @Param('id', ParseIntPipe) id: number) {
     return this.tasks.remove(userId, id);
+  }
+
+  @Post('add-multiple')
+  addMultiple(@UserId() userId: number, @Body() body: CreateTaskDto[]) {
+    return this.tasks.addMultiple(userId, body);
   }
 }
