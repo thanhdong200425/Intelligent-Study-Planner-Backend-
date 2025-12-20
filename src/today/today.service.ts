@@ -67,7 +67,7 @@ export class TodayService {
     const timeRemaining = agg._sum.estimateMinutes || 0;
 
     const highPriorityCount = await this.prisma.task.count({
-      where: { userId, completed: false, priority: 'HIGH' },
+      where: { userId, completed: false, priority: 'high' },
     });
 
     const dayOfWeek = now.getDay();
@@ -78,26 +78,8 @@ export class TodayService {
 
     const yearAgo = new Date(now);
     yearAgo.setDate(yearAgo.getDate() - 365);
-    const completions = await this.prisma.habitCompletion.findMany({
-      where: { userId, date: { gte: yearAgo, lte: end } },
-      select: { date: true },
-    });
 
-    const completionSet = new Set(
-      completions.map((c) => this.toDateKey(new Date(c.date))),
-    );
     let streak = 0;
-    for (let i = 0; ; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = this.toDateKey(d);
-      if (completionSet.has(key)) {
-        streak += 1;
-      } else {
-        break;
-      }
-      if (i > 365) break;
-    }
 
     return {
       todaysTasks,
