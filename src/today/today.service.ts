@@ -21,6 +21,13 @@ export class TodayService {
     return d.toISOString().slice(0, 10);
   }
 
+  private calculateDaysLeft(dueDate: Date): number {
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
   async getToday(userId: number) {
     const now = new Date();
     const start = this.startOfDay(now);
@@ -43,9 +50,9 @@ export class TodayService {
       take: 50,
     });
 
-    const todaysTasks = tasksWithDeadlineToday.concat(openTasksNoDeadline);
+    const allTasks = tasksWithDeadlineToday.concat(openTasksNoDeadline);
 
-    const upcomingDeadlines = await this.prisma.deadline.findMany({
+    const upcomingDeadlinesRaw = await this.prisma.deadline.findMany({
       where: { userId, dueDate: { gte: now } },
       include: { course: true },
       orderBy: { dueDate: 'asc' },
@@ -67,7 +74,7 @@ export class TodayService {
     const timeRemaining = agg._sum.estimateMinutes || 0;
 
     const highPriorityCount = await this.prisma.task.count({
-      where: { userId, completed: false, priority: 'HIGH' },
+      where: { userId, completed: false, priority: 'high' },
     });
 
     const dayOfWeek = now.getDay();
@@ -78,26 +85,23 @@ export class TodayService {
 
     const yearAgo = new Date(now);
     yearAgo.setDate(yearAgo.getDate() - 365);
-    const completions = await this.prisma.habitCompletion.findMany({
-      where: { userId, date: { gte: yearAgo, lte: end } },
-      select: { date: true },
-    });
 
-    const completionSet = new Set(
-      completions.map((c) => this.toDateKey(new Date(c.date))),
-    );
     let streak = 0;
-    for (let i = 0; ; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = this.toDateKey(d);
-      if (completionSet.has(key)) {
-        streak += 1;
-      } else {
-        break;
-      }
-      if (i > 365) break;
-    }
+
+    // Transform tasks to include subject from course name
+    const todaysTasks = allTasks.map((task) => ({
+      ...task,
+      subject: task.course?.name || 'No Course',
+      durationMinutes: task.estimateMinutes,
+    }));
+
+    // Transform deadlines to include daysLeft and subject
+    const upcomingDeadlines = upcomingDeadlinesRaw.map((deadline) => ({
+      ...deadline,
+      daysLeft: this.calculateDaysLeft(deadline.dueDate),
+      subject: deadline.course?.name || 'No Course',
+      priority: deadline.priority.toLowerCase() as 'low' | 'medium' | 'high',
+    }));
 
     return {
       todaysTasks,
