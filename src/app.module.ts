@@ -18,6 +18,7 @@ import { EventsModule } from './events/events.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 
 import { SpotifyModule } from './spotify/spotify.module';
+import { TodayModule } from './today/today.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SpotifyModule } from './spotify/spotify.module';
     MailModule,
     RedisModule,
     SpotifyModule,
+    TodayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -21,6 +21,13 @@ export class TodayService {
     return d.toISOString().slice(0, 10);
   }
 
+  private calculateDaysLeft(dueDate: Date): number {
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
   async getToday(userId: number) {
     const now = new Date();
     const start = this.startOfDay(now);
@@ -43,9 +50,9 @@ export class TodayService {
       take: 50,
     });
 
-    const todaysTasks = tasksWithDeadlineToday.concat(openTasksNoDeadline);
+    const allTasks = tasksWithDeadlineToday.concat(openTasksNoDeadline);
 
-    const upcomingDeadlines = await this.prisma.deadline.findMany({
+    const upcomingDeadlinesRaw = await this.prisma.deadline.findMany({
       where: { userId, dueDate: { gte: now } },
       include: { course: true },
       orderBy: { dueDate: 'asc' },
@@ -80,6 +87,21 @@ export class TodayService {
     yearAgo.setDate(yearAgo.getDate() - 365);
 
     let streak = 0;
+
+    // Transform tasks to include subject from course name
+    const todaysTasks = allTasks.map((task) => ({
+      ...task,
+      subject: task.course?.name || 'No Course',
+      durationMinutes: task.estimateMinutes,
+    }));
+
+    // Transform deadlines to include daysLeft and subject
+    const upcomingDeadlines = upcomingDeadlinesRaw.map((deadline) => ({
+      ...deadline,
+      daysLeft: this.calculateDaysLeft(deadline.dueDate),
+      subject: deadline.course?.name || 'No Course',
+      priority: deadline.priority.toLowerCase() as 'low' | 'medium' | 'high',
+    }));
 
     return {
       todaysTasks,
