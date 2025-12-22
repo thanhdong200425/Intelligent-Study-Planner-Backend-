@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,11 +17,15 @@ import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UserId } from '../common/user-id.decorator';
 import { Prisma } from '@prisma/client';
+import { GeminiService } from 'src/gemini/gemini.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasks: TasksService) {}
+  constructor(
+    private readonly tasks: TasksService,
+    private readonly gemini: GeminiService,
+  ) {}
 
   @Post()
   create(@UserId() userId: number, @Body() body: CreateTaskDto) {
@@ -80,5 +85,14 @@ export class TasksController {
   @Post('add-multiple')
   addMultiple(@UserId() userId: number, @Body() body: CreateTaskDto[]) {
     return this.tasks.addMultiple(userId, body);
+  }
+
+  @Post('live/request-ephemeral-token')
+  async requestEphemeralToken() {
+    const { token } = await this.gemini.requestEphemeralToken();
+    return {
+      token,
+      statusCode: HttpStatus.OK,
+    };
   }
 }

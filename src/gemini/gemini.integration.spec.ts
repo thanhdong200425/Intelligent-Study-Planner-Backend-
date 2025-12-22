@@ -182,3 +182,32 @@ describe('GeminiService Integration Tests', () => {
     });
   });
 });
+
+describe('GeminiService Ephemeral Token', () => {
+  let service: GeminiService;
+  let configService: ConfigService;
+
+  beforeAll(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })],
+      providers: [GeminiService],
+    }).compile();
+
+    service = module.get<GeminiService>(GeminiService);
+    configService = module.get<ConfigService>(ConfigService);
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('requestEphemeralToken', () => {
+    it('should return an ephemeral token', async () => {
+      const { token } = await service.requestEphemeralToken();
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+      expect(token?.length).toBeGreaterThan(0);
+      console.log(token);
+    });
+  });
+});

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { AuthToken, GoogleGenAI } from '@google/genai';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ExtractedTask, TaskArraySchema } from './types';
@@ -113,5 +113,29 @@ export class GeminiService {
 `.trim();
 
     return prompt;
+  }
+
+  /*
+    This function is used to request an ephemeral token from Gemini API to use the voice mode. By default, this token is valid in 1 min to start new Live API session, and 30 mins to continue the session.
+    @returns the ephemeral token
+  */
+  async requestEphemeralToken() {
+    const expireTime = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    const ephemeralToken = await this.genAI.authTokens.create({
+      config: {
+        uses: 1,
+        expireTime,
+        newSessionExpireTime: new Date(
+          Date.now() + 1 * 60 * 1000,
+        ).toISOString(), // Default 1 minute in the future
+        httpOptions: { apiVersion: 'v1alpha' },
+      },
+    });
+
+    const returnedToken = ephemeralToken.name
+      ? ephemeralToken.name.split('/').pop()
+      : undefined;
+
+    return { token: returnedToken };
   }
 }
