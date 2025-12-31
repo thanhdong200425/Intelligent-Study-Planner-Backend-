@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma';
@@ -12,6 +14,7 @@ interface AuthResponse {
     id: number;
     email: string;
     name: string | null;
+    avatar: string | null;
   };
   accessToken: string;
   refreshToken?: string;
@@ -79,6 +82,7 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        avatar: true,
         hashedPassword: true,
       },
     });
@@ -103,6 +107,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
+        avatar: user.avatar,
       },
     };
   }
@@ -146,6 +151,7 @@ export class AuthService {
         id: true,
         email: true,
         name: true,
+        avatar: true,
       },
     });
 
