@@ -15,11 +15,14 @@ export class SpotifyService {
       'streaming',
       'user-read-email',
       'user-read-private',
+      'user-modify-playback-state',
+      'user-read-playback-state',
     ];
     const scope = scopes.join(' ');
     const state = this.generateRandomString(16);
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://127.0.0.1:3000';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://127.0.0.1:3000';
     const redirectUri = `${frontendUrl}/spotify/auth/callback`;
 
     const params = new URLSearchParams({
@@ -35,9 +38,12 @@ export class SpotifyService {
 
   async requestAccessToken(code: string): Promise<any> {
     const clientId = this.configService.get<string>('SPOTIFY_CLIENT_ID');
-    const clientSecret = this.configService.get<string>('SPOTIFY_CLIENT_SECRET');
-    
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://127.0.0.1:3000';
+    const clientSecret = this.configService.get<string>(
+      'SPOTIFY_CLIENT_SECRET',
+    );
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://127.0.0.1:3000';
     const redirectUri = `${frontendUrl}/spotify/auth/callback`;
 
     const authOptions = {
@@ -65,7 +71,10 @@ export class SpotifyService {
       );
       return response.data;
     } catch (error) {
-      console.error('Error requesting access token:', error.response?.data || error.message);
+      console.error(
+        'Error requesting access token:',
+        error.response?.data || error.message,
+      );
       throw error;
     }
   }

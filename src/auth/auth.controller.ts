@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Post, Req, Res, UseGuards, } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
@@ -15,6 +25,7 @@ interface AuthResponse {
     id: number;
     email: string;
     name: string | null;
+    avatar: string | null;
   };
   statusCode: number;
   accessToken: string;
