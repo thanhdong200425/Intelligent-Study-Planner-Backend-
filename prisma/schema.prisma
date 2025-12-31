@@ -14,7 +14,7 @@ datasource db {
 model User {
   id             Int     @id @default(autoincrement())
   email          String  @unique
-  hashedPassword String  @map("hashed_password")
+  hashedPassword String? @map("hashed_password")
   name           String?
   avatar         String?
 
@@ -22,6 +22,8 @@ model User {
   updatedAt          DateTime  @updatedAt @map("updated_at")
   emailVerifiedAt    DateTime? @map("email_verified_at")
   hashedRefreshToken String?
+  oauthProvider      String?   @map("oauth_provider") // e.g., 'google', 'github'
+  oauthProviderId    String?   @map("oauth_provider_id") // e.g., Google or GitHub user ID
 
   // Relationships - all user data
   courses             Course[]

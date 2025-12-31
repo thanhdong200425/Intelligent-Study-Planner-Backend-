@@ -85,7 +85,7 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid credentials!');
 
-    const isPasswordValid = await argon2.verify(user.hashedPassword, password);
+    const isPasswordValid = await argon2.verify(user.hashedPassword!, password);
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials!');
 
@@ -213,5 +213,41 @@ export class AuthService {
       accessToken,
       refreshToken: oldRefreshToken,
     };
+  }
+
+  async handleOAuthLogin(oauthUser: any): Promise<AuthResponse> {
+    let user = await this.prisma.user.findUnique({
+      where: { email: oauthUser.email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: oauthUser.email,
+          name: `${oauthUser.firstName} ${oauthUser.lastName}`.trim(),
+          avatar: oauthUser.picture,
+          oauthProvider: oauthUser.provider,
+          oauthProviderId: oauthUser.providerId,
+        },
+      });
+    } else {
+      // Update user's OAuth info if user already exists
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          oauthProvider: oauthUser.provider,
+          oauthProviderId: oauthUser.providerId,
+          avatar: oauthUser.picture,
+        },
+      });
+    }
+
+    const { accessToken, refreshToken } = await this.generateTokens(
+      user.id,
+      user.email,
+    );
+
+    await this.updateRefreshTokenHash(user.id, refreshToken);
+    return { user: user, accessToken, refreshToken };
   }
 }

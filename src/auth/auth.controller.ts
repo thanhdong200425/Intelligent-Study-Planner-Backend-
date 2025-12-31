@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req, Res, UseGuards, } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
@@ -15,6 +7,8 @@ import { UserId } from '../common/user-id.decorator';
 import { ConfigService } from '@nestjs/config';
 import { SessionService } from '../session/session.service';
 import { RefreshTokenGuard } from './refresh-token.guard';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { GithubOAuthGuard } from './guards/github-oauth.guard';
 
 interface AuthResponse {
   user: {
@@ -120,5 +114,50 @@ export class AuthController {
     this.sessionService.clearRefreshTokenCookie(res);
 
     return result;
+  }
+
+  // OAuth routes
+  // Google OAuth routes
+  @Get('google')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth() {
+    // Initiates the Google OAuth flow
+    // The guard automatically redirects to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuthCallback(@Req() req: any, @Res() res: Response) {
+    // After Google authenticates, this is called
+    const result = await this.auth.handleOAuthLogin(req.user);
+
+    // Set httpOnly cookie that middleware can read (same as login flow)
+    this.sessionService.setRefreshTokenCookie(res, result.refreshToken!);
+
+    // Redirect to frontend with only access token (refresh token secured in cookie)
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`,
+    );
+  }
+
+  // GitHub OAuth routes
+  @Get('github')
+  @UseGuards(GithubOAuthGuard)
+  async githubAuth() {
+    // Initiates the GitHub OAuth flow
+  }
+
+  @Get('github/callback')
+  @UseGuards(GithubOAuthGuard)
+  async githubAuthCallback(@Req() req: any, @Res() res: Response) {
+    const result = await this.auth.handleOAuthLogin(req.user);
+
+    // Set httpOnly cookie that middleware can read (same as login flow)
+    this.sessionService.setRefreshTokenCookie(res, result.refreshToken!);
+
+    // Redirect to frontend with only access token (refresh token secured in cookie)
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`,
+    );
   }
 }
