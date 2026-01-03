@@ -19,6 +19,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 
 import { SpotifyModule } from './spotify/spotify.module';
 import { TodayModule } from './today/today.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { TodayModule } from './today/today.module';
     RedisModule,
     SpotifyModule,
     TodayModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [AppService],
