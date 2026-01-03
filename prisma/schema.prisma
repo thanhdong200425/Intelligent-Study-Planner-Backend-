@@ -36,6 +36,7 @@ model User {
   sessions            Session[]
   events              Event[]
   eventTypes          EventType[]
+  feedback            Feedback[]
 
   @@map("users")
 }
@@ -236,6 +237,24 @@ model Session {
   @@index([userId])
   @@index([absoluteExpiresAt])
   @@map("sessions")
+}
+
+// Feedback
+model Feedback {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  feedbackType String   @map("feedback_type")
+  category     String?
+  subject      String
+  message      String   @db.Text
+  attachments  String[] @default([]) // Array of file URLs/paths
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
 }
 
 // Enums
