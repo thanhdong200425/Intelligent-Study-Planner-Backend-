@@ -44,8 +44,12 @@ export class SessionService {
     res.clearCookie(cookieName!, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
+      domain:
+        process.env.NODE_ENV === 'production'
+          ? process.env.COOKIE_DOMAIN || undefined
+          : undefined,
     });
   }
 }
