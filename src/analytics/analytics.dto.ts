@@ -6,3 +6,19 @@ export class AnalyticsStatsDto {
   totalStudyHoursGrowthRate: number;
   taskCompletionRate: number;
 }
+
+export class WeeklyStudyHoursDto {
+  day: string;
+  hours: number;
+}
+
+export class TaskDistributionDto {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export class StudyTimeByCourseDto {
+  course: string;
+  hours: number;
+}

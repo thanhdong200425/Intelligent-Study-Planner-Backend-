@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 import { TimerSessionType } from '@prisma/client';
-import { AnalyticsStatsDto } from './analytics.dto';
-import { startOfWeek, endOfWeek, subWeeks } from 'date-fns';
+import {
+  AnalyticsStatsDto,
+  WeeklyStudyHoursDto,
+  TaskDistributionDto,
+  StudyTimeByCourseDto,
+} from './analytics.dto';
+import { startOfWeek, endOfWeek, subWeeks, getDay } from 'date-fns';
 
 @Injectable()
 export class AnalyticsService {
@@ -142,5 +147,149 @@ export class AnalyticsService {
       totalStudyHoursGrowthRate: Math.round(totalStudyHoursGrowthRate),
       taskCompletionRate: Math.round(taskCompletionRate),
     };
+  }
+
+  async getWeeklyStudyHours(
+    userId: number,
+  ): Promise<WeeklyStudyHoursDto[]> {
+    const now = new Date();
+    const startOfThisWeek = startOfWeek(now);
+    const endOfThisWeek = endOfWeek(now);
+
+    // Get all focus timer sessions for this week
+    const sessions = await this.prisma.timerSession.findMany({
+      where: {
+        userId,
+        type: TimerSessionType.focus,
+        startTime: {
+          gte: startOfThisWeek,
+          lte: endOfThisWeek,
+        },
+        endTime: {
+          not: null,
+        },
+      },
+      select: {
+        startTime: true,
+        durationMinutes: true,
+      },
+    });
+
+    // Group by day of week
+    const dayMap = new Map<number, number>();
+
+    sessions.forEach((session) => {
+      const dayOfWeek = getDay(session.startTime); // 0 = Sunday, 1 = Monday, etc.
+      const currentMinutes = dayMap.get(dayOfWeek) || 0;
+      dayMap.set(dayOfWeek, currentMinutes + session.durationMinutes);
+    });
+
+    // Map to output format with day abbreviations
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const result: WeeklyStudyHoursDto[] = [];
+
+    for (let i = 0; i < 7; i++) {
+      const minutes = dayMap.get(i) || 0;
+      const hours = Math.round((minutes / 60) * 10) / 10;
+      result.push({
+        day: dayNames[i],
+        hours,
+      });
+    }
+
+    return result;
+  }
+
+  async getTaskDistribution(userId: number): Promise<TaskDistributionDto[]> {
+    // Get all tasks grouped by type
+    const tasks = await this.prisma.task.groupBy({
+      by: ['type'],
+      where: {
+        userId,
+      },
+      _count: {
+        type: true,
+      },
+    });
+
+    // Map to display names and colors
+    const typeMap: Record<
+      string,
+      { name: string; color: string }
+    > = {
+      reading: { name: 'Reading', color: '#3b82f6' },
+      coding: { name: 'Coding', color: '#8b5cf6' },
+      writing: { name: 'Writing', color: '#10b981' },
+      pset: { name: 'Pset', color: '#f59e0b' },
+      other: { name: 'Others', color: '#6b7280' },
+    };
+
+    const result: TaskDistributionDto[] = tasks.map((task) => ({
+      name: typeMap[task.type]?.name || task.type,
+      value: task._count.type,
+      color: typeMap[task.type]?.color || '#6b7280',
+    }));
+
+    return result;
+  }
+
+  async getStudyTimeByCourse(
+    userId: number,
+  ): Promise<StudyTimeByCourseDto[]> {
+    // Get all focus timer sessions with course information
+    const sessions = await this.prisma.timerSession.findMany({
+      where: {
+        userId,
+        type: TimerSessionType.focus,
+        endTime: {
+          not: null,
+        },
+        taskId: {
+          not: null,
+        },
+      },
+      select: {
+        durationMinutes: true,
+        task: {
+          select: {
+            courseId: true,
+            course: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Group by course
+    const courseMap = new Map<number, { name: string; minutes: number }>();
+
+    sessions.forEach((session) => {
+      if (session.task?.course && session.task.courseId) {
+        const courseId = session.task.course.id;
+        const courseName = session.task.course.name;
+        const current = courseMap.get(courseId) || {
+          name: courseName,
+          minutes: 0,
+        };
+        courseMap.set(courseId, {
+          name: courseName,
+          minutes: current.minutes + session.durationMinutes,
+        });
+      }
+    });
+
+    // Convert to array and sort by hours descending
+    const result: StudyTimeByCourseDto[] = Array.from(courseMap.values())
+      .map((course) => ({
+        course: course.name,
+        hours: Math.round((course.minutes / 60) * 10) / 10,
+      }))
+      .sort((a, b) => b.hours - a.hours);
+
+    return result;
   }
 }
