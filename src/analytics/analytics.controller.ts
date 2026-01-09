@@ -6,6 +6,7 @@ import {
   WeeklyStudyHoursDto,
   TaskDistributionDto,
   StudyTimeByCourseDto,
+  FocusHoursHeatmapDto,
 } from './analytics.dto';
 import { AnalyticsService } from './analytics.service';
 
@@ -38,5 +39,12 @@ export class AnalyticsController {
     @UserId() userId: number,
   ): Promise<StudyTimeByCourseDto[]> {
     return this.analyticsService.getStudyTimeByCourse(userId);
+  }
+
+  @Get('focus-hours-heatmap')
+  getFocusHoursHeatmap(
+    @UserId() userId: number,
+  ): Promise<FocusHoursHeatmapDto[]> {
+    return this.analyticsService.getFocusHoursHeatmap(userId);
   }
 }

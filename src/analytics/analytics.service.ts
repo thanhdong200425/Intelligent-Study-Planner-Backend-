@@ -6,8 +6,9 @@ import {
   WeeklyStudyHoursDto,
   TaskDistributionDto,
   StudyTimeByCourseDto,
+  FocusHoursHeatmapDto,
 } from './analytics.dto';
-import { startOfWeek, endOfWeek, subWeeks, getDay } from 'date-fns';
+import { startOfWeek, endOfWeek, subWeeks, getDay, subDays, format } from 'date-fns';
 
 @Injectable()
 export class AnalyticsService {
@@ -289,6 +290,62 @@ export class AnalyticsService {
         hours: Math.round((course.minutes / 60) * 10) / 10,
       }))
       .sort((a, b) => b.hours - a.hours);
+
+    return result;
+  }
+
+  async getFocusHoursHeatmap(
+    userId: number,
+  ): Promise<FocusHoursHeatmapDto[]> {
+    // Calculate date range: 364 days from today (52 complete weeks)
+    const now = new Date();
+    const startDate = subDays(now, 364);
+
+    // Query completed focus sessions in range
+    const sessions = await this.prisma.timerSession.findMany({
+      where: {
+        userId,
+        type: TimerSessionType.focus,
+        startTime: {
+          gte: startDate,
+          lte: now,
+        },
+        endTime: {
+          not: null,
+        },
+      },
+      select: {
+        startTime: true,
+        durationMinutes: true,
+      },
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+
+    // Group by date (YYYY-MM-DD) and sum minutes
+    const dateMap = new Map<string, number>();
+
+    sessions.forEach((session) => {
+      const dateKey = format(session.startTime, 'yyyy-MM-dd');
+      const currentMinutes = dateMap.get(dateKey) || 0;
+      dateMap.set(dateKey, currentMinutes + session.durationMinutes);
+    });
+
+    // Generate complete 365-day array (even days with 0 hours)
+    const result: FocusHoursHeatmapDto[] = [];
+
+    for (let i = 0; i <= 364; i++) {
+      const date = subDays(now, 364 - i);
+      const dateKey = format(date, 'yyyy-MM-dd');
+      const minutes = dateMap.get(dateKey) || 0;
+      const hours = Math.round((minutes / 60) * 10) / 10; // Round to 1 decimal
+
+      result.push({
+        date: dateKey,
+        hours,
+      });
+    }
 
     return result;
   }

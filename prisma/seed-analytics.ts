@@ -1,5 +1,5 @@
 import { PrismaClient, TimerSessionType, TaskType } from '@prisma/client';
-import { startOfWeek, addDays } from 'date-fns';
+import { startOfWeek, addDays, subDays, getDay } from 'date-fns';
 import * as readline from 'readline';
 
 const prisma = new PrismaClient();
@@ -454,6 +454,89 @@ async function seedTimerSessions(tasks: any[]) {
 }
 
 /**
+ * Seed timer sessions for a full year (365 days) with realistic patterns
+ */
+async function seedYearOfFocusSessions(tasks: any[]) {
+  console.log('\n⏱️  Creating year-long focus sessions...');
+
+  const now = new Date();
+  const timerSessions = [];
+
+  // Generate sessions for past 365 days
+  for (let daysAgo = 364; daysAgo >= 0; daysAgo--) {
+    const date = subDays(now, daysAgo);
+    const dayOfWeek = getDay(date);
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const month = date.getMonth();
+    const isLightMonth = month === 6 || month === 7; // Summer
+
+    // 10% chance of rest day (0 hours)
+    const isRestDay = Math.random() < 0.1;
+    if (isRestDay) continue;
+
+    // Calculate base hours with realistic patterns
+    let baseHours;
+    if (isWeekend) {
+      baseHours = Math.random() * 3 + 0.5; // 0.5-3.5h
+    } else if (isLightMonth) {
+      baseHours = Math.random() * 3 + 1; // 1-4h summer
+    } else {
+      baseHours = Math.random() * 5 + 2; // 2-7h weekdays
+    }
+
+    // 15% chance of intense study day
+    const isIntenseDay = Math.random() < 0.15;
+    if (isIntenseDay && !isWeekend) {
+      baseHours += 1.5;
+    }
+
+    const totalHours = Math.min(baseHours, 8);
+
+    // Split into 1-4 sessions
+    const sessionCount = Math.ceil(Math.random() * 3) + 1;
+    const minutesPerSession = Math.floor((totalHours * 60) / sessionCount);
+
+    let currentHour = 8; // Start at 8 AM
+
+    for (let i = 0; i < sessionCount; i++) {
+      const task = tasks[Math.floor(Math.random() * Math.min(tasks.length, 14))];
+      const variation = Math.floor(Math.random() * 10) - 5;
+      const durationMinutes = Math.max(25, minutesPerSession + variation);
+
+      const startTime = new Date(date);
+      startTime.setHours(currentHour, Math.floor(Math.random() * 60), 0, 0);
+
+      const endTime = new Date(startTime);
+      endTime.setMinutes(startTime.getMinutes() + durationMinutes);
+
+      timerSessions.push({
+        userId,
+        taskId: task.id,
+        timeBlockId: null,
+        type: TimerSessionType.focus,
+        startTime,
+        endTime,
+        durationMinutes,
+        status: 'completed' as const,
+      });
+
+      currentHour += Math.ceil(durationMinutes / 60) + 1;
+      if (currentHour >= 22) break; // Don't schedule past 10 PM
+    }
+  }
+
+  await prisma.timerSession.createMany({ data: timerSessions });
+
+  console.log(`✅ Created ${timerSessions.length} focus sessions over 365 days`);
+  const totalHours = (
+    timerSessions.reduce((sum, s) => sum + s.durationMinutes, 0) / 60
+  ).toFixed(1);
+  const avgPerDay = (parseFloat(totalHours) / 365).toFixed(1);
+  console.log(`  📊 Total: ${totalHours} hours`);
+  console.log(`  📈 Average: ${avgPerDay} hours/day`);
+}
+
+/**
  * Display summary statistics
  */
 async function displaySummary() {
@@ -589,7 +672,18 @@ async function seedAllData() {
     // Seed new data
     const courses = await seedCourses();
     const tasks = await seedTasks(courses);
-    await seedTimerSessions(tasks);
+
+    // Prompt user for seed scope
+    const seedFullYear = await askQuestion(
+      '📅 Seed full year of focus sessions (365 days)? Otherwise seeds current week only. (y/n): ',
+    );
+
+    if (seedFullYear) {
+      await seedYearOfFocusSessions(tasks);
+    } else {
+      await seedTimerSessions(tasks);
+    }
+
     await displaySummary();
 
     console.log('\n✅ Analytics seed completed successfully!');

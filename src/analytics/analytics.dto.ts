@@ -22,3 +22,8 @@ export class StudyTimeByCourseDto {
   course: string;
   hours: number;
 }
+
+export class FocusHoursHeatmapDto {
+  date: string; // ISO date string (YYYY-MM-DD)
+  hours: number; // Focus hours (decimal)
+}
