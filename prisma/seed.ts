@@ -1,4 +1,5 @@
 import { PrismaClient, TimerSessionType } from '@prisma/client';
+import * as readline from 'readline';
 
 const prisma = new PrismaClient();
 
@@ -13,11 +14,26 @@ function getRandomDuration(min = 20, max = 90): number {
  * Get a random TimerSessionType
  */
 function getRandomSessionType(): TimerSessionType {
-  const types = [
-    TimerSessionType.focus,
-    TimerSessionType.break,
-  ];
+  const types = [TimerSessionType.focus, TimerSessionType.break];
   return types[Math.floor(Math.random() * types.length)];
+}
+
+/**
+ * Ask user a yes/no question
+ */
+function askQuestion(query: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(query, (answer) => {
+      rl.close();
+      const normalized = answer.toLowerCase().trim();
+      resolve(normalized === 'y' || normalized === 'yes');
+    });
+  });
 }
 
 /**
@@ -27,21 +43,36 @@ async function seedTimerSessions() {
   console.log('🌱 Seeding timer sessions for user 3...');
 
   const userId = 3;
-  const today = new Date('2026-01-04'); // January 4, 2026
 
-  // Create 10 timer sessions with different start times throughout the day
+  // Ask user if they want to use today's date
+  const useToday = await askQuestion(
+    '📅 Generate timer sessions for today? (y/n): ',
+  );
+
+  const targetDate = useToday ? new Date() : new Date('2026-01-04');
+
+  console.log(
+    `📆 Using date: ${targetDate.toLocaleDateString()} (${targetDate.toDateString()})`,
+  );
+
+  // If using today, only create focus sessions; otherwise use mixed types
+  const sessionCount = 10;
   const timerSessions = [];
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < sessionCount; i++) {
     // Distribute sessions throughout the day (8 AM to 8 PM)
     const startHour = 8 + Math.floor(i * 1.2); // Spreads across ~12 hours
     const startMinute = Math.floor(Math.random() * 60);
 
-    const startTime = new Date(today);
+    const startTime = new Date(targetDate);
     startTime.setHours(startHour, startMinute, 0, 0);
 
     const durationMinutes = getRandomDuration(20, 90);
-    const type = getRandomSessionType();
+    const endTime = new Date(startTime);
+    endTime.setMinutes(startTime.getMinutes() + durationMinutes);
+
+    // Use focus type if today, otherwise random type
+    const type = useToday ? TimerSessionType.focus : getRandomSessionType();
 
     timerSessions.push({
       userId,
@@ -49,7 +80,7 @@ async function seedTimerSessions() {
       taskId: null,
       timeBlockId: null,
       startTime,
-      endTime: null,
+      endTime, // Set endTime for completed sessions
       durationMinutes,
       status: 'completed' as const,
     });
@@ -66,7 +97,7 @@ async function seedTimerSessions() {
   console.log('\n📊 Timer Sessions Summary:');
   timerSessions.forEach((session, index) => {
     console.log(
-      `  ${index + 1}. ${session.type.padEnd(12)} | Duration: ${session.durationMinutes}min | Start: ${session.startTime.toLocaleTimeString()}`,
+      `  ${index + 1}. ${session.type.padEnd(12)} | Duration: ${session.durationMinutes}min | Start: ${session.startTime.toLocaleTimeString()} - End: ${session.endTime?.toLocaleTimeString()}`,
     );
   });
 }
@@ -79,15 +110,33 @@ async function clearTimerSessions() {
 
   const userId = 3;
 
+  // Ask user if they want to clear only today's sessions or all
+  const clearOnlyToday = await askQuestion(
+    '📅 Clear only today\'s timer sessions? (y = today only, n = all sessions): ',
+  );
+
+  const whereClause: any = { userId };
+
+  if (clearOnlyToday) {
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    whereClause.startTime = {
+      gte: startOfDay,
+      lte: endOfDay,
+    };
+
+    console.log(`📆 Clearing sessions for: ${today.toDateString()}`);
+  } else {
+    console.log('📆 Clearing ALL timer sessions for user 3...');
+  }
+
   const deleted = await prisma.timerSession.deleteMany({
-    where: {
-      userId,
-      // Optional: only delete sessions from today
-      startTime: {
-        gte: new Date('2026-01-04T00:00:00.000Z'),
-        lt: new Date('2026-01-05T00:00:00.000Z'),
-      },
-    },
+    where: whereClause,
   });
 
   console.log(`✅ Successfully deleted ${deleted.count} timer sessions`);
